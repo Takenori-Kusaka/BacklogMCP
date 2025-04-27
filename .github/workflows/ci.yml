@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'poetry'
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        poetry --version
+    - name: Install dependencies
+      run: |
+        poetry install --with dev
+    - name: Install uv
+      run: |
+        pip install uv
+        uv --version
+    - name: Lint with flake8
+      run: |
+        poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    - name: Format check with black
+      run: |
+        poetry run black --check .
+    - name: Import sort check with isort
+      run: |
+        poetry run isort --check-only --profile black .
+    - name: Type check with mypy
+      run: |
+        poetry run mypy app tests
+    - name: Test with pytest
+      run: |
+        poetry run pytest --cov=app
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: false
+
+  validate-structure:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Validate project structure
+      run: |
+        # Check if required directories exist
+        for dir in app/domain app/application app/infrastructure app/presentation tests/unit tests/integration tests/e2e scripts .github cdk docker; do
+          if [ ! -d "$dir" ]; then
+            echo "Required directory $dir does not exist"
+            exit 1
+          fi
+        done
+        echo "Project structure validation passed"
+    
+    - name: Check for tests
+      run: |
+        # Check if Python files in app/ have corresponding test files
+        for pyfile in $(find app -name "*.py" -not -path "*/\.*"); do
+          # Extract the file name without extension
+          filename=$(basename "$pyfile" .py)
+          # Check if a test file exists for this file
+          if ! find tests -name "test_${filename}.py" | grep -q .; then
+            echo "Warning: No test file found for $pyfile"
+            # Don't fail the build, just warn
+          fi
+        done
+        
+    - name: Check Poetry configuration
+      run: |
+        if [ ! -f "pyproject.toml" ]; then
+          echo "Error: pyproject.toml does not exist"
+          exit 1
+        fi
+        echo "Poetry configuration validation passed"
