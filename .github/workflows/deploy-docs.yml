@@ -1,0 +1,68 @@
+name: Deploy API Documentation
+
+on:
+  workflow_run:
+    workflows: ["Python Tests & API Docs"]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時実行を許可する設定
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: API仕様書のデプロイ
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    # 前のワークフローが成功した場合のみ実行
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+      
+      - name: 前のワークフローからのアーティファクトをダウンロード
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ci.yml
+          name: openapi-spec
+          path: docs
+          workflow_conclusion: success
+          run_id: ${{ github.event.workflow_run.id }}
+      
+      - name: docsディレクトリの内容を確認
+        run: ls -la docs
+      
+      - name: HTML形式のドキュメントを生成
+        run: |
+          # Redoclyをインストール
+          npm install -g @redocly/cli
+          
+          # HTML形式のドキュメントを生成
+          mkdir -p docs/html
+          redocly build-docs docs/openapi.yaml -o docs/html/index.html
+          
+          # ディレクトリ構造を確認
+          ls -la docs/html
+      
+      - name: GitHub Pagesのセットアップ
+        uses: actions/configure-pages@v4
+      
+      - name: デプロイ用のアーティファクトをアップロード
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/html'
+      
+      - name: GitHub Pagesにデプロイ
+        id: deployment
+        uses: actions/deploy-pages@v4
