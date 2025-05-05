@@ -2,7 +2,7 @@
 プロジェクト関連のMCPツール
 """
 from typing import Dict, List, Any, Optional
-from fastapi_mcp import MCPTool, MCPResource
+from mcp.types import Tool
 from app.application.services.project_service import ProjectService
 from app.infrastructure.backlog.backlog_client import BacklogClient
 import os
@@ -32,29 +32,17 @@ def get_project_service() -> ProjectService:
 
 
 # プロジェクト一覧を取得するMCPツール
-get_projects_tool = MCPTool(
+get_projects_tool = Tool(
     name="get_projects",
     description="Backlogのプロジェクト一覧を取得します",
-    input_schema={
+    inputSchema={
         "type": "object",
         "properties": {},
         "required": []
-    },
-    output_schema={
-        "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-                "id": {"type": "integer"},
-                "projectKey": {"type": "string"},
-                "name": {"type": "string"}
-            }
-        }
     }
 )
 
-
-@get_projects_tool.handler
+# @get_projects_tool.handler
 async def get_projects_handler(params: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     プロジェクト一覧を取得するMCPツールのハンドラー
@@ -70,10 +58,10 @@ async def get_projects_handler(params: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 # 特定のプロジェクトを取得するMCPツール
-get_project_tool = MCPTool(
+get_project_tool = Tool(
     name="get_project",
     description="指定されたプロジェクトキーのプロジェクト情報を取得します",
-    input_schema={
+    inputSchema={
         "type": "object",
         "properties": {
             "project_key": {
@@ -82,19 +70,10 @@ get_project_tool = MCPTool(
             }
         },
         "required": ["project_key"]
-    },
-    output_schema={
-        "type": "object",
-        "properties": {
-            "id": {"type": "integer"},
-            "projectKey": {"type": "string"},
-            "name": {"type": "string"}
-        }
     }
 )
 
-
-@get_project_tool.handler
+# @get_project_tool.handler
 async def get_project_handler(params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     特定のプロジェクトを取得するMCPツールのハンドラー
@@ -120,14 +99,13 @@ async def get_project_handler(params: Dict[str, Any]) -> Optional[Dict[str, Any]
 
 
 # プロジェクト一覧リソース
-projects_resource = MCPResource(
-    name="projects",
-    description="Backlogのプロジェクト一覧",
-    uri="projects"
-)
+projects_resource = {
+    "uri": "projects",
+    "name": "Backlogのプロジェクト一覧",
+    "description": "Backlogのプロジェクト一覧を取得するリソース"
+}
 
-
-@projects_resource.handler
+# @projects_resource.handler
 async def projects_resource_handler() -> List[Dict[str, Any]]:
     """
     プロジェクト一覧リソースのハンドラー

@@ -1,0 +1,424 @@
+{
+  "name": "backlog-mcp",
+  "version": "0.1.0",
+  "description": "Backlog MCP Server",
+  "serverUrl": "http://localhost:8000/mcp",
+  "tools": [
+    {
+      "name": "get_projects",
+      "description": "プロジェクト一覧を取得します",
+      "inputSchema": {}
+    },
+    {
+      "name": "get_project",
+      "description": "特定のプロジェクトを取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_key": {
+            "type": "string",
+            "description": "プロジェクトキー"
+          }
+        },
+        "required": ["project_key"]
+      }
+    },
+    {
+      "name": "get_issues",
+      "description": "課題一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "description": "プロジェクトID"
+          },
+          "project_key": {
+            "type": "string",
+            "description": "プロジェクトキー（project_idが指定されていない場合に使用）"
+          },
+          "status_id": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "ステータスID"
+          },
+          "status_name": {
+            "type": "string",
+            "description": "ステータス名（status_idが指定されていない場合に使用）"
+          },
+          "assignee_id": {
+            "type": "integer",
+            "description": "担当者ID"
+          },
+          "assignee_name": {
+            "type": "string",
+            "description": "担当者名（assignee_idが指定されていない場合に使用）"
+          },
+          "keyword": {
+            "type": "string",
+            "description": "検索キーワード"
+          },
+          "count": {
+            "type": "integer",
+            "description": "取得件数（1-100）",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    {
+      "name": "create_issue",
+      "description": "課題を作成します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "description": "プロジェクトID"
+          },
+          "project_key": {
+            "type": "string",
+            "description": "プロジェクトキー（project_idが指定されていない場合に使用）"
+          },
+          "summary": {
+            "type": "string",
+            "description": "課題の件名"
+          },
+          "description": {
+            "type": "string",
+            "description": "課題の詳細"
+          },
+          "issue_type_id": {
+            "type": "integer",
+            "description": "課題種別ID"
+          },
+          "issue_type_name": {
+            "type": "string",
+            "description": "課題の種別名（issue_type_idが指定されていない場合に使用）"
+          },
+          "priority_id": {
+            "type": "integer",
+            "description": "優先度ID"
+          },
+          "priority_name": {
+            "type": "string",
+            "description": "優先度名（priority_idが指定されていない場合に使用）"
+          },
+          "assignee_id": {
+            "type": "integer",
+            "description": "担当者ID"
+          },
+          "assignee_name": {
+            "type": "string",
+            "description": "担当者名（assignee_idが指定されていない場合に使用）"
+          },
+          "category_name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "カテゴリー名のリスト"
+          },
+          "milestone_name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "マイルストーン名のリスト"
+          },
+          "version_name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "発生バージョン名のリスト"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "開始日（yyyy-MM-dd形式）"
+          },
+          "due_date": {
+            "type": "string",
+            "description": "期限日（yyyy-MM-dd形式）"
+          }
+        },
+        "required": ["summary"]
+      }
+    },
+    {
+      "name": "get_issue",
+      "description": "特定の課題を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_id_or_key": {
+            "type": "string",
+            "description": "課題IDまたは課題キー"
+          }
+        },
+        "required": ["issue_id_or_key"]
+      }
+    },
+    {
+      "name": "update_issue",
+      "description": "課題を更新します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_id_or_key": {
+            "type": "string",
+            "description": "課題IDまたは課題キー"
+          },
+          "summary": {
+            "type": "string",
+            "description": "課題の件名"
+          },
+          "description": {
+            "type": "string",
+            "description": "課題の詳細"
+          },
+          "status_id": {
+            "type": "integer",
+            "description": "ステータスID"
+          },
+          "status_name": {
+            "type": "string",
+            "description": "ステータス名（status_idが指定されていない場合に使用）"
+          },
+          "priority_id": {
+            "type": "integer",
+            "description": "優先度ID"
+          },
+          "priority_name": {
+            "type": "string",
+            "description": "優先度名（priority_idが指定されていない場合に使用）"
+          },
+          "assignee_id": {
+            "type": "integer",
+            "description": "担当者ID"
+          },
+          "assignee_name": {
+            "type": "string",
+            "description": "担当者名（assignee_idが指定されていない場合に使用）"
+          },
+          "category_name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "カテゴリー名のリスト"
+          },
+          "milestone_name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "マイルストーン名のリスト"
+          },
+          "version_name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "発生バージョン名のリスト"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "開始日（yyyy-MM-dd形式）"
+          },
+          "due_date": {
+            "type": "string",
+            "description": "期限日（yyyy-MM-dd形式）"
+          }
+        },
+        "required": ["issue_id_or_key"]
+      }
+    },
+    {
+      "name": "delete_issue",
+      "description": "課題を削除します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_id_or_key": {
+            "type": "string",
+            "description": "課題IDまたは課題キー"
+          }
+        },
+        "required": ["issue_id_or_key"]
+      }
+    },
+    {
+      "name": "add_comment",
+      "description": "課題にコメントを追加します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_id_or_key": {
+            "type": "string",
+            "description": "課題IDまたは課題キー"
+          },
+          "content": {
+            "type": "string",
+            "description": "コメント内容"
+          }
+        },
+        "required": ["issue_id_or_key", "content"]
+      }
+    },
+    {
+      "name": "get_issue_comments",
+      "description": "課題のコメント一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_id_or_key": {
+            "type": "string",
+            "description": "課題IDまたは課題キー"
+          }
+        },
+        "required": ["issue_id_or_key"]
+      }
+    },
+    {
+      "name": "bulk_update_status",
+      "description": "複数の課題のステータスを一括更新します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "課題IDのリスト"
+          },
+          "issue_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "課題キーのリスト（issue_idsが指定されていない場合に使用）"
+          },
+          "status_id": {
+            "type": "integer",
+            "description": "ステータスID"
+          },
+          "status_name": {
+            "type": "string",
+            "description": "ステータス名（status_idが指定されていない場合に使用）"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "bulk_update_assignee",
+      "description": "複数の課題の担当者を一括更新します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "課題IDのリスト"
+          },
+          "issue_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "課題キーのリスト（issue_idsが指定されていない場合に使用）"
+          },
+          "assignee_id": {
+            "type": "integer",
+            "description": "担当者ID"
+          },
+          "assignee_name": {
+            "type": "string",
+            "description": "担当者名（assignee_idが指定されていない場合に使用）"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_users",
+      "description": "ユーザー一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_priorities",
+      "description": "優先度一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_statuses",
+      "description": "ステータス一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id_or_key": {
+            "type": "string",
+            "description": "プロジェクトIDまたはプロジェクトキー"
+          }
+        },
+        "required": ["project_id_or_key"]
+      }
+    },
+    {
+      "name": "get_categories",
+      "description": "カテゴリー一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id_or_key": {
+            "type": "string",
+            "description": "プロジェクトIDまたはプロジェクトキー"
+          }
+        },
+        "required": ["project_id_or_key"]
+      }
+    },
+    {
+      "name": "get_milestones",
+      "description": "マイルストーン一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id_or_key": {
+            "type": "string",
+            "description": "プロジェクトIDまたはプロジェクトキー"
+          }
+        },
+        "required": ["project_id_or_key"]
+      }
+    },
+    {
+      "name": "get_versions",
+      "description": "発生バージョン一覧を取得します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id_or_key": {
+            "type": "string",
+            "description": "プロジェクトIDまたはプロジェクトキー"
+          }
+        },
+        "required": ["project_id_or_key"]
+      }
+    }
+  ]
+}

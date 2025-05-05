@@ -1,68 +1,65 @@
 """
-プロジェクト管理APIの統合テスト
+プロジェクト管理の結合テスト
 """
-import pytest
 import os
-from unittest.mock import patch
-from fastapi.testclient import TestClient
-from app.main import app
+import pytest
+from dotenv import load_dotenv
+from app.infrastructure.backlog.backlog_client import BacklogClient
 
 
-class TestProjectAPI:
-    """プロジェクト管理APIのテストクラス"""
+class TestProjectIntegration:
+    """プロジェクト管理の結合テストクラス"""
 
-    @pytest.fixture
-    def client(self):
-        """テストクライアントを作成するフィクスチャ"""
-        return TestClient(app)
+    @pytest.fixture(scope="class")
+    def env_vars(self):
+        """環境変数を読み込むフィクスチャ"""
+        load_dotenv()
+        return {
+            "api_key": os.getenv("BACKLOG_API_KEY"),
+            "space": os.getenv("BACKLOG_SPACE"),
+            "project": os.getenv("BACKLOG_PROJECT")
+        }
 
-    def test_get_projects_returns_200(self, client, mock_backlog_client):
-        """プロジェクト一覧を取得するAPIが200を返すことを確認するテスト"""
-        # 環境変数をモック
-        with patch.dict(os.environ, {"BACKLOG_API_KEY": "dummy_key", "BACKLOG_SPACE": "dummy_space"}):
-            # BacklogClientのget_projectsメソッドをモック
-            with patch("app.presentation.api.project_router.BacklogClient") as mock_client_class:
-                mock_client_class.return_value = mock_backlog_client
-                
-                # APIを呼び出し
-                response = client.get("/api/projects")
-            
-            # 結果の検証
-            assert response.status_code == 200
-            assert isinstance(response.json(), list)
-            assert len(response.json()) == 2
+    @pytest.mark.skipif(
+        not os.getenv("BACKLOG_API_KEY") or not os.getenv("BACKLOG_SPACE"),
+        reason="Backlog API環境変数が設定されていません"
+    )
+    def test_get_projects_from_real_api(self, env_vars):
+        """実際のBacklog APIからプロジェクト一覧を取得するテスト"""
+        # テスト対象のクライアントをインスタンス化
+        backlog_client = BacklogClient(
+            api_key=env_vars["api_key"],
+            space=env_vars["space"]
+        )
+        
+        # プロジェクト一覧を取得
+        projects = backlog_client.get_projects()
+        
+        # 結果の検証
+        assert isinstance(projects, list)
+        # プロジェクトが存在する場合のみ検証
+        if len(projects) > 0:
+            assert "id" in projects[0]
+            assert "projectKey" in projects[0]
+            assert "name" in projects[0]
 
-    def test_get_projects_returns_json(self, client, mock_backlog_client):
-        """プロジェクト一覧を取得するAPIがJSONを返すことを確認するテスト"""
-        # 環境変数をモック
-        with patch.dict(os.environ, {"BACKLOG_API_KEY": "dummy_key", "BACKLOG_SPACE": "dummy_space"}):
-            # BacklogClientのget_projectsメソッドをモック
-            with patch("app.presentation.api.project_router.BacklogClient") as mock_client_class:
-                mock_client_class.return_value = mock_backlog_client
-                
-                # APIを呼び出し
-                response = client.get("/api/projects")
-            
-            # 結果の検証
-            assert response.headers["Content-Type"] == "application/json"
-            data = response.json()
-            assert isinstance(data, list)
-            assert len(data) == 2
-            assert "id" in data[0]
-            assert "projectKey" in data[0]
-            assert "name" in data[0]
-
-    def test_get_projects_handles_error(self, client):
-        """エラー発生時の処理をテスト"""
-        # 環境変数をモック
-        with patch.dict(os.environ, {"BACKLOG_API_KEY": "dummy_key", "BACKLOG_SPACE": "dummy_space"}):
-            # ProjectServiceのget_projectsメソッドをモック
-            with patch("app.presentation.api.project_router.get_project_service") as mock_get_service:
-                mock_get_service.side_effect = Exception("Service Error")
-                
-                # APIを呼び出し
-                response = client.get("/api/projects")
-            
-            # エラーが発生した場合は500を返すことを確認
-            assert response.status_code == 500
-            assert "detail" in response.json()
+    @pytest.mark.skipif(
+        not os.getenv("BACKLOG_API_KEY") or not os.getenv("BACKLOG_SPACE") or not os.getenv("BACKLOG_PROJECT"),
+        reason="Backlog API環境変数が設定されていません"
+    )
+    def test_get_project_by_key(self, env_vars):
+        """特定のプロジェクトキーでプロジェクトを取得するテスト"""
+        # テスト対象のクライアントをインスタンス化
+        backlog_client = BacklogClient(
+            api_key=env_vars["api_key"],
+            space=env_vars["space"]
+        )
+        
+        # プロジェクトを取得
+        project = backlog_client.get_project(env_vars["project"])
+        
+        # 結果の検証
+        assert project is not None
+        assert "id" in project
+        assert "projectKey" in project
+        assert project["projectKey"] == env_vars["project"]

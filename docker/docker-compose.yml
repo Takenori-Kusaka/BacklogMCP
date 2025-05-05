@@ -1,0 +1,16 @@
+name: backlog-mcp
+services:
+  backlog-mcp-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ..:/app
+    environment:
+      - BACKLOG_API_KEY=${BACKLOG_API_KEY}
+      - BACKLOG_SPACE=${BACKLOG_SPACE}
+      - BACKLOG_PROJECT=${BACKLOG_PROJECT}
+      - BACKLOG_DISABLE_SSL_VERIFY=${BACKLOG_DISABLE_SSL_VERIFY}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

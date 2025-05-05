@@ -221,7 +221,98 @@ pytest tests/e2e/
 
 # カバレッジレポートの生成
 pytest --cov=app
+
+# テスト実行スクリプトを使用する場合
+python scripts/run_tests.py --unit      # ユニットテストのみ実行
+python scripts/run_tests.py --integration  # 統合テストのみ実行
+python scripts/run_tests.py --e2e       # E2Eテストのみ実行
+python scripts/run_tests.py --coverage   # カバレッジレポートを生成
+python scripts/run_tests.py --verbose    # 詳細な出力
 ```
+
+#### E2Eテスト
+
+E2Eテスト（End-to-End Test）は、アプリケーション全体の動作を実際のユーザーの視点でテストするものです。BacklogMCPでは、以下の2種類のE2Eテストをサポートしています：
+
+1. **モックを使用したE2Eテスト**：実際のBacklog APIに接続せず、モックを使用してテストします。CI/CD環境や、Backlog APIの認証情報がない環境でも実行できます。
+
+2. **実際のBacklog APIに接続するE2Eテスト**：実際のBacklog APIに接続してテストします。より現実的なテストが可能ですが、Backlog APIの認証情報が必要です。
+
+##### E2Eテストの実行に必要な環境設定
+
+実際のBacklog APIに接続するE2Eテストを実行するには、以下の環境変数を設定する必要があります：
+
+```
+BACKLOG_API_KEY=your_backlog_api_key
+BACKLOG_SPACE=your_backlog_space_name
+BACKLOG_PROJECT=your_backlog_project_key
+```
+
+これらの環境変数は、`.env`ファイルに記述するか、環境変数として直接設定することができます。
+
+環境変数が設定されていない場合、実際のBacklog APIに接続するE2Eテストは自動的にスキップされます。
+
+##### E2Eテストの作成方法
+
+E2Eテストを作成するには、`tests/e2e/`ディレクトリに新しいテストファイルを作成します。テストファイル名は`test_*.py`の形式にする必要があります。
+
+E2Eテストでは、以下のパターンが一般的です：
+
+1. **フィクスチャの作成**：テスト用のデータやクライアントを準備するフィクスチャを作成します。
+2. **テスト実行**：APIエンドポイントにリクエストを送信し、レスポンスを検証します。
+3. **クリーンアップ**：テスト用に作成したデータを削除します。
+
+例えば、以下のようなE2Eテストを作成することができます：
+
+```python
+@pytest.mark.skipif(
+    not os.getenv("BACKLOG_API_KEY") or not os.getenv("BACKLOG_SPACE") or not os.getenv("BACKLOG_PROJECT"),
+    reason="Backlog API環境変数が設定されていません"
+)
+def test_get_issues_from_real_api(self, backlog_client):
+    """実際のBacklog APIから課題一覧を取得するテスト"""
+    # 課題一覧を取得
+    issues = backlog_client.get_issues()
+    
+    # 結果の検証
+    assert isinstance(issues, list)
+    # 課題が存在する場合のみ検証
+    if len(issues) > 0:
+        assert "id" in issues[0]
+        assert "issueKey" in issues[0]
+        assert "summary" in issues[0]
+```
+
+モックを使用したE2Eテストの例：
+
+```python
+@patch.dict(os.environ, {"BACKLOG_API_KEY": "dummy_key", "BACKLOG_SPACE": "dummy_space"})
+def test_bulk_update_status_e2e(self, client, mock_backlog_client):
+    """複数チケットのステータスを一括更新するE2Eテスト"""
+    # APIリクエスト
+    response = client.post(
+        "/api/bulk/status",
+        json={
+            "issue_ids": ["TEST-1", "TEST-2", "TEST-3"],
+            "status_id": 2
+        }
+    )
+    
+    # レスポンスの検証
+    assert response.status_code == 200
+    result = response.json()
+    assert result["total"] == 3
+    assert result["success"] == 2
+    assert result["failed"] == 1
+```
+
+##### E2Eテストのベストプラクティス
+
+1. **テスト環境の分離**：テスト用の専用プロジェクトを使用するか、テスト用のデータを明確に識別できるようにします。
+2. **クリーンアップの徹底**：テスト中に作成したデータは、テスト終了後に必ず削除します。
+3. **環境変数のチェック**：実際のAPIに接続するテストは、環境変数が設定されている場合のみ実行するようにします。
+4. **モックの活用**：可能な限りモックを使用して、外部依存性を最小限に抑えます。
+5. **テストの独立性**：各テストは独立して実行できるようにします。テスト間の依存関係を作らないようにします。
 
 ## ライセンス
 

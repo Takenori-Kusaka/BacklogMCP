@@ -14,6 +14,10 @@ load_dotenv()
 
 # APIルーターのインポート
 from app.presentation.api.project_router import router as project_router
+from app.presentation.api.issue_router import router as issue_router
+from app.presentation.api.bulk_operations_router import router as bulk_operations_router
+from app.presentation.api.user_router import router as user_router
+from app.presentation.api.priority_router import router as priority_router
 
 # FastAPIアプリケーションの作成
 app = FastAPI(
@@ -33,16 +37,45 @@ app.add_middleware(
 
 # APIルーターの登録
 app.include_router(project_router)
+app.include_router(issue_router)
+app.include_router(bulk_operations_router)
+app.include_router(user_router)
+app.include_router(priority_router)
 
 # MCPサーバーの作成
+print("[DEBUG] MCPサーバー作成開始")
 mcp_server = FastApiMCP(
     fastapi=app,
     name="BacklogMCP",
     description="Backlog SaaSをModel Context Protocol (MCP)経由で操作するためのAPI",
 )
+print("[DEBUG] MCPサーバー作成完了")
+
+# MCPサーバーの設定
+# FastApiMCP 0.3.3では、FastAPIのエンドポイントを自動的にMCPツールとして登録するため、
+# カスタムツールのインポートは不要です。
+print("[DEBUG] MCPサーバー設定開始")
+
+# MCPサーバーの設定を更新
+mcp_server.setup_server()
+print("[DEBUG] MCPサーバー設定完了")
+
+# 登録されたツールの一覧を表示
+print("[DEBUG] 登録されたMCPツール一覧:")
+try:
+    # FastApiMCP 0.3.3では、toolsプロパティを使用してツール一覧を取得
+    if hasattr(mcp_server, 'tools'):
+        for tool in mcp_server.tools:
+            print(f"[DEBUG] - ツール名: {tool.name}")
+    else:
+        print("[DEBUG] - ツール一覧を取得できません")
+except Exception as e:
+    print(f"[DEBUG] - ツール一覧取得エラー: {str(e)}")
 
 # MCPサーバーをマウント
+print("[DEBUG] MCPサーバーマウント開始")
 mcp_server.mount(mount_path="/mcp")
+print("[DEBUG] MCPサーバーマウント完了")
 
 # グローバル例外ハンドラー
 @app.exception_handler(Exception)
