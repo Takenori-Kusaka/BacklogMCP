@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { BacklogMcpStack } from '../lib/backlog-mcp-stack';
+import { BacklogMcpStack } from '../lib';
 
 const app = new cdk.App();
 new BacklogMcpStack(app, 'BacklogMcpStack', {
