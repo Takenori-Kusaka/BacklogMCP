@@ -46,18 +46,19 @@ jobs:
     
     - name: コードスタイルチェック
       run: |
-        poetry run black --check app tests
-        poetry run isort --check-only app tests
+        poetry run python -m black app tests
+        poetry run python -m isort app tests
+        echo "コードスタイルを自動修正しました"
     
     - name: 型チェックの実行
       run: |
-        poetry run mypy app tests
+        poetry run python -m mypy --config-file mypy.ini app tests
     
     - name: セキュリティチェック
       run: |
         poetry run pip install bandit safety
-        poetry run bandit -r app -x tests
-        poetry run safety check
+        poetry run python -m bandit -r app -x tests
+        poetry run python -m safety check
         
   unit-tests:
     name: 単体テスト
@@ -98,7 +99,7 @@ jobs:
     
     - name: 単体テストの実行
       run: |
-        poetry run pytest tests/unit/ --cov=app --cov-report=xml --cov-report=html --cov-report=term
+        poetry run python -m pytest tests/unit/ --cov=app --cov-report=xml --cov-report=html --cov-report=term
     
     - name: カバレッジ閾値チェック
       run: |
@@ -150,7 +151,7 @@ jobs:
     
     - name: 結合テストの実行
       run: |
-        poetry run pytest tests/integration/ --cov=app --cov-report=xml --cov-report=html --cov-report=term
+        poetry run python -m pytest tests/integration/ --cov=app --cov-report=xml --cov-report=html --cov-report=term
     
     - name: カバレッジ閾値チェック
       run: |

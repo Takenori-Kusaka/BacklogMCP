@@ -46,6 +46,6 @@ htmlcov/
 # Temporary files
 *.tmp
 */**/*.pyc
+/**/__pycache__/
 coverage.xml
 cdk/coverage/
-/**/__pycache__/

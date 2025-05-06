@@ -1,23 +1,26 @@
 """
 BacklogMCP - メインアプリケーション
 """
+
 import os
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi_mcp import FastApiMCP
+
 from dotenv import load_dotenv
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi_mcp import FastApiMCP
 from mangum import Mangum
 
 # 環境変数の読み込み
 load_dotenv()
 
+from app.presentation.api.bulk_operations_router import router as bulk_operations_router
+from app.presentation.api.issue_router import router as issue_router
+from app.presentation.api.priority_router import router as priority_router
+
 # APIルーターのインポート
 from app.presentation.api.project_router import router as project_router
-from app.presentation.api.issue_router import router as issue_router
-from app.presentation.api.bulk_operations_router import router as bulk_operations_router
 from app.presentation.api.user_router import router as user_router
-from app.presentation.api.priority_router import router as priority_router
 
 # FastAPIアプリケーションの作成
 app = FastAPI(
@@ -64,7 +67,7 @@ print("[DEBUG] MCPサーバー設定完了")
 print("[DEBUG] 登録されたMCPツール一覧:")
 try:
     # FastApiMCP 0.3.3では、toolsプロパティを使用してツール一覧を取得
-    if hasattr(mcp_server, 'tools'):
+    if hasattr(mcp_server, "tools"):
         for tool in mcp_server.tools:
             print(f"[DEBUG] - ツール名: {tool.name}")
     else:
@@ -77,54 +80,52 @@ print("[DEBUG] MCPサーバーマウント開始")
 mcp_server.mount(mount_path="/mcp")
 print("[DEBUG] MCPサーバーマウント完了")
 
+
 # グローバル例外ハンドラー
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     グローバル例外ハンドラー
-    
+
     Args:
         request: リクエスト
         exc: 例外
-        
+
     Returns:
         JSONResponse: エラーレスポンス
     """
     return JSONResponse(
-        status_code=500,
-        content={"error": f"Internal Server Error: {str(exc)}"}
+        status_code=500, content={"error": f"Internal Server Error: {str(exc)}"}
     )
+
 
 # ルートエンドポイント
 @app.get("/")
-async def root():
+async def root() -> dict:
     """
     ルートエンドポイント
-    
+
     Returns:
         dict: ウェルカムメッセージ
     """
-    return {
-        "message": "Welcome to BacklogMCP API",
-        "docs": "/docs",
-        "mcp": "/mcp"
-    }
+    return {"message": "Welcome to BacklogMCP API", "docs": "/docs", "mcp": "/mcp"}
+
 
 # AWS Lambda用ハンドラー
 handler = Mangum(app)
 
+
 # 開発サーバー起動用関数
-def start():
+def start() -> None:
     """
     開発サーバーを起動
     """
     import uvicorn
+
     uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
-        reload=True
+        "app.main:app", host="0.0.0.0", port=int(os.getenv("PORT", "8000")), reload=True
     )
+
 
 # スクリプトとして実行された場合
 if __name__ == "__main__":

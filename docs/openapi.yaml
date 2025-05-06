@@ -1,0 +1,1114 @@
+openapi: 3.1.0
+info:
+  title: BacklogMCP
+  description: "Backlog SaaS\u3092Model Context Protocol (MCP)\u7D4C\u7531\u3067\u64CD\
+    \u4F5C\u3059\u308B\u305F\u3081\u306EAPI"
+  version: 0.1.0
+paths:
+  /api/projects/:
+    get:
+      tags:
+      - projects
+      summary: Get Projects
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u4E00\u89A7\u3092\u53D6\u5F97\
+        \u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    project_service:\
+        \ \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\
+        \uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u30D7\u30ED\u30B8\
+        \u30A7\u30AF\u30C8\u4E00\u89A7"
+      operationId: get_projects
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+                title: Response Get Projects
+        '404':
+          description: Not found
+  /api/projects/{project_key}:
+    get:
+      tags:
+      - projects
+      summary: Get Project
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u3092\u53D6\u5F97\u3059\u308B\
+        \u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    project_key: \u30D7\
+        \u30ED\u30B8\u30A7\u30AF\u30C8\u30AD\u30FC\n    project_service: \u30D7\u30ED\
+        \u30B8\u30A7\u30AF\u30C8\u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\
+        \u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\
+        \u60C5\u5831"
+      operationId: get_project
+      parameters:
+      - name: project_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Project
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/projects/{project_key}/statuses:
+    get:
+      tags:
+      - projects
+      summary: Get Project Statuses
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u30B9\u30C6\u30FC\u30BF\
+        \u30B9\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\
+        \u30F3\u30C8\n\nArgs:\n    project_key: \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\
+        \u30AD\u30FC\n    project_service: \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u7BA1\
+        \u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\
+        \nReturns:\n    \u30B9\u30C6\u30FC\u30BF\u30B9\u4E00\u89A7"
+      operationId: get_project_statuses
+      parameters:
+      - name: project_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Project Statuses
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/projects/{project_key}/issue-types:
+    get:
+      tags:
+      - projects
+      summary: Get Project Issue Types
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u8AB2\u984C\u7A2E\u5225\
+        \u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\
+        \u30C8\n\nArgs:\n    project_key: \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u30AD\
+        \u30FC\n    project_service: \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u7BA1\u7406\
+        \u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n\
+        \    \u8AB2\u984C\u7A2E\u5225\u4E00\u89A7"
+      operationId: get_project_issue_types
+      parameters:
+      - name: project_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Project Issue Types
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/projects/{project_key}/categories:
+    get:
+      tags:
+      - projects
+      summary: Get Project Categories
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u30AB\u30C6\u30B4\u30EA\
+        \u30FC\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\
+        \u30F3\u30C8\n\nArgs:\n    project_key: \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\
+        \u30AD\u30FC\n    project_service: \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u7BA1\
+        \u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\
+        \nReturns:\n    \u30AB\u30C6\u30B4\u30EA\u30FC\u4E00\u89A7"
+      operationId: get_project_categories
+      parameters:
+      - name: project_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Project Categories
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/projects/{project_key}/milestones:
+    get:
+      tags:
+      - projects
+      summary: Get Project Milestones
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u30DE\u30A4\u30EB\u30B9\
+        \u30C8\u30FC\u30F3\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\u30C9\
+        \u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    project_key: \u30D7\u30ED\u30B8\u30A7\
+        \u30AF\u30C8\u30AD\u30FC\n    project_service: \u30D7\u30ED\u30B8\u30A7\u30AF\
+        \u30C8\u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\
+        \uFF09\n\nReturns:\n    \u30DE\u30A4\u30EB\u30B9\u30C8\u30FC\u30F3\u4E00\u89A7"
+      operationId: get_project_milestones
+      parameters:
+      - name: project_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Project Milestones
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/projects/{project_key}/versions:
+    get:
+      tags:
+      - projects
+      summary: Get Project Versions
+      description: "\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u767A\u751F\u30D0\u30FC\
+        \u30B8\u30E7\u30F3\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\u30C9\
+        \u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    project_key: \u30D7\u30ED\u30B8\u30A7\
+        \u30AF\u30C8\u30AD\u30FC\n    project_service: \u30D7\u30ED\u30B8\u30A7\u30AF\
+        \u30C8\u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\
+        \uFF09\n\nReturns:\n    \u767A\u751F\u30D0\u30FC\u30B8\u30E7\u30F3\u4E00\u89A7"
+      operationId: get_project_versions
+      parameters:
+      - name: project_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Project Versions
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/issues/:
+    get:
+      tags:
+      - issues
+      summary: Get Issues
+      description: "\u8AB2\u984C\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\
+        \u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    project_id: \u30D7\u30ED\u30B8\
+        \u30A7\u30AF\u30C8ID\uFF08\u6307\u5B9A\u3057\u306A\u3044\u5834\u5408\u306F\
+        \u5168\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\uFF09\n    keyword: \u691C\u7D22\
+        \u30AD\u30FC\u30EF\u30FC\u30C9\n    count: \u53D6\u5F97\u4EF6\u6570\uFF08\
+        1-100\uFF09\n    issue_service: \u8AB2\u984C\u7BA1\u7406\u30B5\u30FC\u30D3\
+        \u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u8AB2\u984C\
+        \u4E00\u89A7"
+      operationId: get_issues
+      parameters:
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Project Id
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Keyword
+      - name: count
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Count
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Issues
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - issues
+      summary: Create Issue
+      description: "\u8AB2\u984C\u3092\u4F5C\u6210\u3059\u308B\u30A8\u30F3\u30C9\u30DD\
+        \u30A4\u30F3\u30C8\n\nArgs:\n    issue_data: \u8AB2\u984C\u4F5C\u6210\u30C7\
+        \u30FC\u30BF\n    issue_service: \u8AB2\u984C\u7BA1\u7406\u30B5\u30FC\u30D3\
+        \u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u4F5C\u6210\
+        \u3055\u308C\u305F\u8AB2\u984C\u60C5\u5831"
+      operationId: create_issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Create Issue
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/issues/{issue_id_or_key}:
+    get:
+      tags:
+      - issues
+      summary: Get Issue
+      description: "\u8AB2\u984C\u60C5\u5831\u3092\u53D6\u5F97\u3059\u308B\u30A8\u30F3\
+        \u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    issue_id_or_key: \u8AB2\u984C\
+        ID\u307E\u305F\u306F\u8AB2\u984C\u30AD\u30FC\n    issue_service: \u8AB2\u984C\
+        \u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\
+        \n\nReturns:\n    \u8AB2\u984C\u60C5\u5831"
+      operationId: get_issue
+      parameters:
+      - name: issue_id_or_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Issue Id Or Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Issue
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - issues
+      summary: Update Issue
+      description: "\u8AB2\u984C\u3092\u66F4\u65B0\u3059\u308B\u30A8\u30F3\u30C9\u30DD\
+        \u30A4\u30F3\u30C8\n\nArgs:\n    issue_id_or_key: \u8AB2\u984CID\u307E\u305F\
+        \u306F\u8AB2\u984C\u30AD\u30FC\n    issue_data: \u8AB2\u984C\u66F4\u65B0\u30C7\
+        \u30FC\u30BF\n    issue_service: \u8AB2\u984C\u7BA1\u7406\u30B5\u30FC\u30D3\
+        \u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u66F4\u65B0\
+        \u3055\u308C\u305F\u8AB2\u984C\u60C5\u5831"
+      operationId: update_issue
+      parameters:
+      - name: issue_id_or_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Issue Id Or Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Update Issue
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - issues
+      summary: Delete Issue
+      description: "\u8AB2\u984C\u3092\u524A\u9664\u3059\u308B\u30A8\u30F3\u30C9\u30DD\
+        \u30A4\u30F3\u30C8\n\nArgs:\n    issue_id_or_key: \u8AB2\u984CID\u307E\u305F\
+        \u306F\u8AB2\u984C\u30AD\u30FC\n    issue_service: \u8AB2\u984C\u7BA1\u7406\
+        \u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09"
+      operationId: delete_issue
+      parameters:
+      - name: issue_id_or_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Issue Id Or Key
+      responses:
+        '204':
+          description: Successful Response
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/issues/{issue_id_or_key}/comments:
+    post:
+      tags:
+      - issues
+      summary: Add Comment
+      description: "\u8AB2\u984C\u306B\u30B3\u30E1\u30F3\u30C8\u3092\u8FFD\u52A0\u3059\
+        \u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    issue_id_or_key:\
+        \ \u8AB2\u984CID\u307E\u305F\u306F\u8AB2\u984C\u30AD\u30FC\n    comment_data:\
+        \ \u30B3\u30E1\u30F3\u30C8\u4F5C\u6210\u30C7\u30FC\u30BF\n    issue_service:\
+        \ \u8AB2\u984C\u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\
+        \u6CE8\u5165\uFF09\n\nReturns:\n    \u8FFD\u52A0\u3055\u308C\u305F\u30B3\u30E1\
+        \u30F3\u30C8\u60C5\u5831"
+      operationId: add_comment
+      parameters:
+      - name: issue_id_or_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Issue Id Or Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Add Comment
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - issues
+      summary: Get Issue Comments
+      description: "\u8AB2\u984C\u306E\u30B3\u30E1\u30F3\u30C8\u4E00\u89A7\u3092\u53D6\
+        \u5F97\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n  \
+        \  issue_id_or_key: \u8AB2\u984CID\u307E\u305F\u306F\u8AB2\u984C\u30AD\u30FC\
+        \n    count: \u53D6\u5F97\u4EF6\u6570\uFF081-100\uFF09\n    issue_service:\
+        \ \u8AB2\u984C\u7BA1\u7406\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\
+        \u6CE8\u5165\uFF09\n\nReturns:\n    \u30B3\u30E1\u30F3\u30C8\u4E00\u89A7"
+      operationId: get_issue_comments
+      parameters:
+      - name: issue_id_or_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Issue Id Or Key
+      - name: count
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Count
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Get Issue Comments
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bulk/status:
+    post:
+      tags:
+      - bulk_operations
+      summary: Bulk Update Status
+      description: "\u8907\u6570\u30C1\u30B1\u30C3\u30C8\u306E\u30B9\u30C6\u30FC\u30BF\
+        \u30B9\u3092\u4E00\u62EC\u66F4\u65B0\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\
+        \u30F3\u30C8\n\nArgs:\n    request: \u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\
+        \u30B9\u30C8\n    bulk_service: \u4E00\u62EC\u64CD\u4F5C\u30B5\u30FC\u30D3\
+        \u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u51E6\u7406\
+        \u7D50\u679C\u306E\u7D71\u8A08\u60C5\u5831"
+      operationId: bulk_update_status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkStatusUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Bulk Update Status
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bulk/assignee:
+    post:
+      tags:
+      - bulk_operations
+      summary: Bulk Update Assignee
+      description: "\u8907\u6570\u30C1\u30B1\u30C3\u30C8\u306E\u62C5\u5F53\u8005\u3092\
+        \u4E00\u62EC\u66F4\u65B0\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\
+        \n\nArgs:\n    request: \u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\u30C8\
+        \n    bulk_service: \u4E00\u62EC\u64CD\u4F5C\u30B5\u30FC\u30D3\u30B9\uFF08\
+        \u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u51E6\u7406\u7D50\u679C\
+        \u306E\u7D71\u8A08\u60C5\u5831"
+      operationId: bulk_update_assignee
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkAssigneeUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Bulk Update Assignee
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bulk/priority:
+    post:
+      tags:
+      - bulk_operations
+      summary: Bulk Update Priority
+      description: "\u8907\u6570\u30C1\u30B1\u30C3\u30C8\u306E\u512A\u5148\u5EA6\u3092\
+        \u4E00\u62EC\u66F4\u65B0\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\
+        \n\nArgs:\n    request: \u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\u30C8\
+        \n    bulk_service: \u4E00\u62EC\u64CD\u4F5C\u30B5\u30FC\u30D3\u30B9\uFF08\
+        \u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u51E6\u7406\u7D50\u679C\
+        \u306E\u7D71\u8A08\u60C5\u5831"
+      operationId: bulk_update_priority
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkPriorityUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Bulk Update Priority
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bulk/milestone:
+    post:
+      tags:
+      - bulk_operations
+      summary: Bulk Update Milestone
+      description: "\u8907\u6570\u30C1\u30B1\u30C3\u30C8\u306E\u30DE\u30A4\u30EB\u30B9\
+        \u30C8\u30FC\u30F3\u3092\u4E00\u62EC\u66F4\u65B0\u3059\u308B\u30A8\u30F3\u30C9\
+        \u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    request: \u4E00\u62EC\u66F4\u65B0\u30EA\
+        \u30AF\u30A8\u30B9\u30C8\n    bulk_service: \u4E00\u62EC\u64CD\u4F5C\u30B5\
+        \u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n\
+        \    \u51E6\u7406\u7D50\u679C\u306E\u7D71\u8A08\u60C5\u5831"
+      operationId: bulk_update_milestone
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkMilestoneUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Bulk Update Milestone
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bulk/category:
+    post:
+      tags:
+      - bulk_operations
+      summary: Bulk Update Category
+      description: "\u8907\u6570\u30C1\u30B1\u30C3\u30C8\u306E\u30AB\u30C6\u30B4\u30EA\
+        \u3092\u4E00\u62EC\u66F4\u65B0\u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\
+        \u30C8\n\nArgs:\n    request: \u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\
+        \u30C8\n    bulk_service: \u4E00\u62EC\u64CD\u4F5C\u30B5\u30FC\u30D3\u30B9\
+        \uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\nReturns:\n    \u51E6\u7406\u7D50\
+        \u679C\u306E\u7D71\u8A08\u60C5\u5831"
+      operationId: bulk_update_category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkCategoryUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Bulk Update Category
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bulk/delete:
+    post:
+      tags:
+      - bulk_operations
+      summary: Bulk Delete Issues
+      description: "\u8907\u6570\u30C1\u30B1\u30C3\u30C8\u3092\u4E00\u62EC\u524A\u9664\
+        \u3059\u308B\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    request:\
+        \ \u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\u30C8\n    bulk_service:\
+        \ \u4E00\u62EC\u64CD\u4F5C\u30B5\u30FC\u30D3\u30B9\uFF08\u4F9D\u5B58\u6027\
+        \u6CE8\u5165\uFF09\n\nReturns:\n    \u51E6\u7406\u7D50\u679C\u306E\u7D71\u8A08\
+        \u60C5\u5831"
+      operationId: bulk_delete_issues
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Bulk Delete Issues
+        '404':
+          description: Not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/users/:
+    get:
+      tags:
+      - users
+      summary: Get Users
+      description: "\u30E6\u30FC\u30B6\u30FC\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\
+        \u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    backlog_client: Backlog\u30AF\
+        \u30E9\u30A4\u30A2\u30F3\u30C8\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\
+        \nReturns:\n    \u30E6\u30FC\u30B6\u30FC\u4E00\u89A7"
+      operationId: get_users
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+                title: Response Get Users
+        '404':
+          description: Not found
+  /api/priorities/:
+    get:
+      tags:
+      - priorities
+      summary: Get Priorities
+      description: "\u512A\u5148\u5EA6\u4E00\u89A7\u3092\u53D6\u5F97\u3059\u308B\u30A8\
+        \u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\nArgs:\n    backlog_client: Backlog\u30AF\
+        \u30E9\u30A4\u30A2\u30F3\u30C8\uFF08\u4F9D\u5B58\u6027\u6CE8\u5165\uFF09\n\
+        \nReturns:\n    \u512A\u5148\u5EA6\u4E00\u89A7"
+      operationId: get_priorities
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+                title: Response Get Priorities
+        '404':
+          description: Not found
+  /:
+    get:
+      summary: Root
+      description: "\u30EB\u30FC\u30C8\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8\n\
+        \nReturns:\n    dict: \u30A6\u30A7\u30EB\u30AB\u30E0\u30E1\u30C3\u30BB\u30FC\
+        \u30B8"
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Root  Get
+components:
+  schemas:
+    BulkAssigneeUpdateRequest:
+      properties:
+        issue_ids:
+          items:
+            type: string
+          type: array
+          title: Issue Ids
+        assignee_id:
+          type: integer
+          title: Assignee Id
+      type: object
+      required:
+      - issue_ids
+      - assignee_id
+      title: BulkAssigneeUpdateRequest
+      description: "\u62C5\u5F53\u8005\u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\
+        \u30C8"
+    BulkCategoryUpdateRequest:
+      properties:
+        issue_ids:
+          items:
+            type: string
+          type: array
+          title: Issue Ids
+        category_id:
+          type: integer
+          title: Category Id
+      type: object
+      required:
+      - issue_ids
+      - category_id
+      title: BulkCategoryUpdateRequest
+      description: "\u30AB\u30C6\u30B4\u30EA\u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\
+        \u30B9\u30C8"
+    BulkMilestoneUpdateRequest:
+      properties:
+        issue_ids:
+          items:
+            type: string
+          type: array
+          title: Issue Ids
+        milestone_id:
+          type: integer
+          title: Milestone Id
+      type: object
+      required:
+      - issue_ids
+      - milestone_id
+      title: BulkMilestoneUpdateRequest
+      description: "\u30DE\u30A4\u30EB\u30B9\u30C8\u30FC\u30F3\u4E00\u62EC\u66F4\u65B0\
+        \u30EA\u30AF\u30A8\u30B9\u30C8"
+    BulkPriorityUpdateRequest:
+      properties:
+        issue_ids:
+          items:
+            type: string
+          type: array
+          title: Issue Ids
+        priority_id:
+          type: integer
+          title: Priority Id
+      type: object
+      required:
+      - issue_ids
+      - priority_id
+      title: BulkPriorityUpdateRequest
+      description: "\u512A\u5148\u5EA6\u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\
+        \u30C8"
+    BulkStatusUpdateRequest:
+      properties:
+        issue_ids:
+          items:
+            type: string
+          type: array
+          title: Issue Ids
+        status_id:
+          type: integer
+          title: Status Id
+      type: object
+      required:
+      - issue_ids
+      - status_id
+      title: BulkStatusUpdateRequest
+      description: "\u30B9\u30C6\u30FC\u30BF\u30B9\u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\
+        \u30A8\u30B9\u30C8"
+    BulkUpdateRequest:
+      properties:
+        issue_ids:
+          items:
+            type: string
+          type: array
+          title: Issue Ids
+      type: object
+      required:
+      - issue_ids
+      title: BulkUpdateRequest
+      description: "\u4E00\u62EC\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\u30C8"
+    CommentCreate:
+      properties:
+        content:
+          type: string
+          title: Content
+      type: object
+      required:
+      - content
+      title: CommentCreate
+      description: "\u30B3\u30E1\u30F3\u30C8\u4F5C\u6210\u30EA\u30AF\u30A8\u30B9\u30C8"
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    IssueCreate:
+      properties:
+        project_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Project Id
+        project_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Project Key
+        summary:
+          type: string
+          title: Summary
+        issue_type_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Issue Type Id
+        issue_type_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Issue Type Name
+        priority_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Priority Id
+        priority_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Priority Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        assignee_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Assignee Id
+        assignee_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Assignee Name
+        category_name:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Category Name
+        milestone_name:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Milestone Name
+        version_name:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Version Name
+        start_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Start Date
+        due_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Due Date
+      type: object
+      required:
+      - summary
+      title: IssueCreate
+      description: "\u8AB2\u984C\u4F5C\u6210\u30EA\u30AF\u30A8\u30B9\u30C8"
+    IssueUpdate:
+      properties:
+        summary:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Summary
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        status_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Status Id
+        status_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status Name
+        priority_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Priority Id
+        priority_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Priority Name
+        assignee_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Assignee Id
+        assignee_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Assignee Name
+        category_name:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Category Name
+        milestone_name:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Milestone Name
+        version_name:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Version Name
+        start_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Start Date
+        due_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Due Date
+      type: object
+      title: IssueUpdate
+      description: "\u8AB2\u984C\u66F4\u65B0\u30EA\u30AF\u30A8\u30B9\u30C8"
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
