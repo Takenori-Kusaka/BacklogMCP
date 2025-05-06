@@ -28,6 +28,12 @@
   "exclude": [
     "node_modules",
     "cdk.out",
-    "dist"
+    "dist",
+    "lib",
+    "bin",
+    "test"
+  ],
+  "include": [
+    "src/**/*"
   ]
 }
