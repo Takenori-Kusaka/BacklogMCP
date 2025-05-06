@@ -42,7 +42,15 @@ jobs:
       run: |
         pip install uv
         uv pip install --system poetry
+        # pybacklogpyモジュールをローカルのwhlファイルからインストール
+        pip install ./reference/pybacklogpy-0.12.1-py3-none-any.whl
+        # poetry.lockファイルを更新
+        poetry lock
         poetry install --no-interaction
+        # pybacklogpyモジュールのインストール確認
+        poetry run pip list | grep pybacklogpy || echo "pybacklogpy not installed"
+        # 仮想環境内にもpybacklogpyをインストール
+        poetry run pip install ./reference/pybacklogpy-0.12.1-py3-none-any.whl
     
     - name: コードスタイルチェック
       run: |
@@ -52,13 +60,17 @@ jobs:
     
     - name: 型チェックの実行
       run: |
+        # 型チェックのためのスタブファイルを作成
+        mkdir -p .venv/lib/python3.10/site-packages/pybacklogpy
+        touch .venv/lib/python3.10/site-packages/pybacklogpy/py.typed
+        # 型チェックの実行
         poetry run python -m mypy --config-file mypy.ini app tests
     
     - name: セキュリティチェック
       run: |
         poetry run pip install bandit safety
         poetry run python -m bandit -r app -x tests
-        poetry run python -m safety check
+        poetry run python -m safety scan
         
   unit-tests:
     name: 単体テスト
@@ -95,7 +107,15 @@ jobs:
       run: |
         pip install uv
         uv pip install --system poetry
+        # pybacklogpyモジュールをローカルのwhlファイルからインストール
+        pip install ./reference/pybacklogpy-0.12.1-py3-none-any.whl
+        # poetry.lockファイルを更新
+        poetry lock
         poetry install --no-interaction
+        # pybacklogpyモジュールのインストール確認
+        poetry run pip list | grep pybacklogpy || echo "pybacklogpy not installed"
+        # 仮想環境内にもpybacklogpyをインストール
+        poetry run pip install ./reference/pybacklogpy-0.12.1-py3-none-any.whl
     
     - name: 単体テストの実行
       run: |
@@ -147,7 +167,15 @@ jobs:
       run: |
         pip install uv
         uv pip install --system poetry
+        # pybacklogpyモジュールをローカルのwhlファイルからインストール
+        pip install ./reference/pybacklogpy-0.12.1-py3-none-any.whl
+        # poetry.lockファイルを更新
+        poetry lock
         poetry install --no-interaction
+        # pybacklogpyモジュールのインストール確認
+        poetry run pip list | grep pybacklogpy || echo "pybacklogpy not installed"
+        # 仮想環境内にもpybacklogpyをインストール
+        poetry run pip install ./reference/pybacklogpy-0.12.1-py3-none-any.whl
     
     - name: 結合テストの実行
       run: |
@@ -187,3 +215,23 @@ jobs:
         name: openapi-spec
         path: docs/openapi.yaml
         retention-days: 30
+
+  cdk-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Install CDK dependencies
+        working-directory: cdk
+        run: npm ci
+
+      - name: Run CDK unit tests
+        working-directory: cdk
+        run: bash scripts/run-tests.sh

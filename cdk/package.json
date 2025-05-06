@@ -8,19 +8,20 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --coverage",
+    "test:safe": "./scripts/run-tests.sh",
     "cdk": "cdk",
     "deploy:dev": "cdk deploy --context environment=dev",
     "deploy:stg": "cdk deploy --context environment=stg",
     "deploy:prod": "cdk deploy --context environment=prod"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^26.0.24",
     "@types/node": "^22.15.3",
     "aws-cdk": "^2.190.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.3.2",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.6",
     "ts-node": "^10.9.2",
-    "typescript": "~5.6.3"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.190.0",

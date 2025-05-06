@@ -5,6 +5,7 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from typing import Optional
 
 # ログディレクトリの作成
 log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -12,7 +13,7 @@ os.makedirs(log_dir, exist_ok=True)
 
 
 # ロガーの設定
-def setup_logger(name, log_file, level=logging.DEBUG):
+def setup_logger(name: str, log_file: str, level: int = logging.DEBUG) -> logging.Logger:
     """
     ロガーの設定
 

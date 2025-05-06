@@ -188,6 +188,7 @@ BacklogMCPは、以下の6つのレベルでテストを実施します：
 5. **CIテスト**: コードの変更がマージされる前に、自動的にテストを実行して品質を確保
 6. **CDテスト**: デプロイされた環境が正しく動作することを確認
 
+
 テストを実行するには：
 
 ```bash
@@ -352,6 +353,92 @@ BacklogMCPは、AWS CDKを使用してAWS環境にデプロイすることがで
 - 高度な業務フロー（ワークフロー・リスク管理・プロジェクト評価）
 
 これらのユースケースに対し、BacklogMCPはMCPツール・APIとして包括的なサポートを提供します。詳細なユースケースや機能要件は `BacklogUsecases.md` を参照してください。
+
+## GitHub Actionsワークフローのデバッグ
+
+GitHub Actionsのワークフローをローカル環境でデバッグするために、[act](https://github.com/nektos/act)を使用することができます。以下の手順で、WSL環境でactを使用してワークフローをデバッグする方法を説明します。
+
+### 前提条件
+
+- WSL（Windows Subsystem for Linux）がインストールされていること
+- Dockerがインストールされていること
+- WSL内でDockerが実行可能であること
+
+### actのインストール
+
+actはすでにリポジトリの`bin`ディレクトリに含まれていますが、必要に応じて以下のコマンドでインストールすることもできます：
+
+```bash
+# バイナリをダウンロードして実行権限を付与
+curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+```
+
+または、リポジトリに含まれているactを使用する場合は、実行権限を付与します：
+
+```bash
+chmod +x ./bin/act
+```
+
+### ワークフローのデバッグ手順
+
+1. **特定のジョブを実行する**
+
+```bash
+# コード品質チェックジョブを実行する例
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
+```
+
+2. **ログファイルに出力する**
+
+WSL環境でログファイルに出力する場合は、UTF-8エンコーディングを明示的に指定することで文字化けを防ぐことができます：
+
+```bash
+# ログファイルにUTF-8エンコードで出力
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_debug_utf8.log 2>&1
+```
+
+3. **コンテナサイズを指定する**
+
+actはDockerコンテナを使用してワークフローを実行します。メモリ不足などの問題を回避するために、コンテナサイズを指定することができます：
+
+```bash
+# コンテナのメモリ制限を4GBに設定
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality --container-options="-m 4GB"
+```
+
+4. **特定のイベントをトリガーとして実行**
+
+```bash
+# プルリクエストイベントをトリガーとして実行
+./bin/act pull_request -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
+
+### トラブルシューティング
+
+actを使用する際の一般的な問題と解決策：
+
+1. **文字化けの問題**：WSL環境でログファイルに出力すると文字化けが発生することがあります。UTF-8エンコーディングを明示的に指定してください。
+
+```bash
+# UTF-8エンコーディングを明示的に指定
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality | iconv -f utf-8 -t utf-8 > act_debug_utf8.log 2>&1
+```
+
+2. **依存関係の問題**：pybacklogpyなどの特定のバージョンが見つからない場合は、pyproject.tomlと.github/workflows/ci.ymlファイルのバージョン指定を確認してください。
+
+3. **メモリ不足エラー**：Dockerコンテナのメモリ制限を増やしてください。
+
+```bash
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality --container-options="-m 8GB"
+```
+
+4. **権限の問題**：WSL環境でactを実行する際に権限の問題が発生する場合は、sudoを使用するか、適切な権限を設定してください。
+
+```bash
+sudo ./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
+```
+
+5. **poetry lockの問題**：poetry lockコマンドのオプションは、poetryのバージョンによって異なる場合があります。エラーが発生した場合は、オプションを調整してください。
 
 ## ライセンス
 

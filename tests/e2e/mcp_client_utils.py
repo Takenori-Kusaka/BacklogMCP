@@ -224,6 +224,10 @@ class MockClientSession:
         """
         logger.info(f"MockClientSession.call_tool({name}, {arguments})")
 
+        # 引数がNoneの場合は空の辞書を使用
+        if arguments is None:
+            arguments = {}
+
         # ダミーのレスポンスを返す
         from mcp.types import CallToolResult, TextContent
 

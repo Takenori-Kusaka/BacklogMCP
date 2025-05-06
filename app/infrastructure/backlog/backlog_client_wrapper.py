@@ -9,19 +9,63 @@ import os
 from typing import Any, Dict, List, Optional, Union
 
 import requests
-import urllib3
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+# requestsパッケージのインポートパスを修正
+# InsecureRequestWarningを一度だけ定義するように修正
+if 'InsecureRequestWarning' not in globals():  # type: ignore
+    try:
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning  # type: ignore
+    except ImportError:
+        try:
+            from urllib3.exceptions import InsecureRequestWarning  # type: ignore
+        except ImportError:
+            # 型チェック用のダミークラス
+            class InsecureRequestWarning(Warning):  # type: ignore
+                pass
+
+# 型チェック用のダミーモジュール
+class DummyUrllib3:
+    def disable_warnings(self, warning_class: type) -> None:
+        """
+        警告を無効化する（ダミー実装）
+
+        Args:
+            warning_class: 無効化する警告クラス
+        """
+        pass
 
 # テスト環境でのみ使用する場合は、SSL証明書の検証を無効化
 # 注意: 本番環境では使用しないでください
 if os.getenv("BACKLOG_DISABLE_SSL_VERIFY", "false").lower() == "true":
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    try:
+        import urllib3
+        if urllib3:
+            urllib3.disable_warnings(InsecureRequestWarning)
+    except (AttributeError, ImportError):
+        # 型チェック用のダミーモジュール
+        dummy_urllib3 = DummyUrllib3()
+        dummy_urllib3.disable_warnings(InsecureRequestWarning)
+        pass
+
+    try:
+        if hasattr(requests, 'packages') and hasattr(requests.packages, 'urllib3'):
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    except (AttributeError, ImportError):
+        pass
 
     # requestsのデフォルト設定を変更（テスト環境でのみ使用）
     old_request = requests.request
 
-    def new_request(*args, **kwargs):
+    def new_request(*args: Any, **kwargs: Any) -> requests.Response:
+        """
+        requestsのリクエスト関数をラップして、SSL証明書の検証を無効化する
+
+        Args:
+            *args: 位置引数
+            **kwargs: キーワード引数
+
+        Returns:
+            requests.Response: レスポンス
+        """
         kwargs["verify"] = False
         return old_request(*args, **kwargs)
 
@@ -65,8 +109,8 @@ class BacklogClient:
         self.version_api = Version(self.config)
 
         # キャッシュ
-        self._users_cache = None
-        self._priorities_cache = None
+        self._users_cache: Optional[List[Dict[str, Any]]] = None
+        self._priorities_cache: Optional[List[Dict[str, Any]]] = None
 
     def get_projects(self) -> List[Dict[str, Any]]:
         """
@@ -76,7 +120,8 @@ class BacklogClient:
             プロジェクト一覧
         """
         response = self.project_api.get_project_list()
-        return json.loads(response.text)
+        result: List[Dict[str, Any]] = json.loads(response.text)
+        return result
 
     def get_project(self, project_key: str) -> Optional[Dict[str, Any]]:
         """
@@ -90,7 +135,8 @@ class BacklogClient:
         """
         try:
             response = self.project_api.get_project(project_key)
-            return json.loads(response.text)
+            result: Dict[str, Any] = json.loads(response.text)
+            return result
         except Exception as e:
             # プロジェクトが存在しない場合などのエラー処理
             print(f"Error getting project {project_key}: {e}")
@@ -130,7 +176,8 @@ class BacklogClient:
                 count=count,
             )
 
-            return json.loads(response.text)
+            result: List[Dict[str, Any]] = json.loads(response.text)
+            return result
         except Exception as e:
             print(f"Error getting issues: {e}")
             return []
@@ -147,7 +194,8 @@ class BacklogClient:
         """
         try:
             response = self.issue_api.get_issue(issue_id_or_key)
-            return json.loads(response.text)
+            result: Dict[str, Any] = json.loads(response.text)
+            return result
         except Exception as e:
             print(f"Error getting issue {issue_id_or_key}: {e}")
             return None
@@ -216,7 +264,7 @@ class BacklogClient:
                 return priority.get("id")
         return None
 
-    def get_statuses(self, project_id_or_key: str) -> List[Dict[str, Any]]:
+    def get_statuses(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         ステータス一覧を取得
 
@@ -229,11 +277,22 @@ class BacklogClient:
         try:
             # PyBacklogPyのバージョンによっては、get_status_listメソッドがない場合があるため、
             # 代わりにget_status_list_of_projectメソッドを使用
+            response = None
             if hasattr(self.status_api, "get_status_list"):
                 response = self.status_api.get_status_list(project_id_or_key)
-            else:
+            elif hasattr(self.status_api, "get_status_list_of_project"):
                 response = self.status_api.get_status_list_of_project(project_id_or_key)
-            return json.loads(response.text)
+            else:
+                # どちらのメソッドも存在しない場合はデフォルト値を返す
+                return [
+                    {"id": 1, "name": "未対応"},
+                    {"id": 2, "name": "処理中"},
+                    {"id": 3, "name": "処理済み"},
+                    {"id": 4, "name": "完了"},
+                ]
+            
+            result: List[Dict[str, Any]] = json.loads(response.text)
+            return result
         except Exception as e:
             print(f"Error getting statuses for project {project_id_or_key}: {e}")
             # エラーが発生した場合は、デフォルトのステータス一覧を返す
@@ -245,7 +304,7 @@ class BacklogClient:
             ]
 
     def get_status_id_by_name(
-        self, project_id_or_key: str, status_name: str
+        self, project_id_or_key: Union[str, int], status_name: str
     ) -> Optional[int]:
         """
         ステータス名からステータスIDを取得
@@ -263,7 +322,9 @@ class BacklogClient:
                 return status.get("id")
         return None
 
-    def get_categories(self, project_id_or_key: str) -> List[Dict[str, Any]]:
+    def get_categories(
+        self, project_id_or_key: Union[str, int]
+    ) -> List[Dict[str, Any]]:
         """
         カテゴリー一覧を取得
 
@@ -274,14 +335,17 @@ class BacklogClient:
             カテゴリー一覧
         """
         try:
-            response = self.category_api.get_category_list(project_id_or_key)
-            return json.loads(response.text)
+            # project_id_or_keyの型をstrに変換
+            project_key = str(project_id_or_key)
+            response = self.category_api.get_category_list(project_key)
+            result: List[Dict[str, Any]] = json.loads(response.text)
+            return result
         except Exception as e:
             print(f"Error getting categories for project {project_id_or_key}: {e}")
             return []
 
     def get_category_id_by_name(
-        self, project_id_or_key: str, category_name: str
+        self, project_id_or_key: Union[str, int], category_name: str
     ) -> Optional[int]:
         """
         カテゴリー名からカテゴリーIDを取得
@@ -299,7 +363,9 @@ class BacklogClient:
                 return category.get("id")
         return None
 
-    def get_milestones(self, project_id_or_key: str) -> List[Dict[str, Any]]:
+    def get_milestones(
+        self, project_id_or_key: Union[str, int]
+    ) -> List[Dict[str, Any]]:
         """
         マイルストーン一覧を取得
 
@@ -310,14 +376,24 @@ class BacklogClient:
             マイルストーン一覧
         """
         try:
-            response = self.milestone_api.get_milestone_list(project_id_or_key)
-            return json.loads(response.text)
+            # PyBacklogPyのバージョンによっては、get_milestone_listメソッドがない場合があるため、
+            # 代わりにget_version_milestone_listメソッドを使用
+            response = None
+            if hasattr(self.milestone_api, "get_milestone_list"):
+                response = self.milestone_api.get_milestone_list(project_id_or_key)
+            elif hasattr(self.milestone_api, "get_version_milestone_list"):
+                response = self.milestone_api.get_version_milestone_list(project_id_or_key)  # type: ignore
+            else:
+                return []
+            
+            result: List[Dict[str, Any]] = json.loads(response.text)
+            return result
         except Exception as e:
             print(f"Error getting milestones for project {project_id_or_key}: {e}")
             return []
 
     def get_milestone_id_by_name(
-        self, project_id_or_key: str, milestone_name: str
+        self, project_id_or_key: Union[str, int], milestone_name: str
     ) -> Optional[int]:
         """
         マイルストーン名からマイルストーンIDを取得
@@ -335,7 +411,7 @@ class BacklogClient:
                 return milestone.get("id")
         return None
 
-    def get_versions(self, project_id_or_key: str) -> List[Dict[str, Any]]:
+    def get_versions(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         バージョン一覧を取得
 
@@ -346,14 +422,21 @@ class BacklogClient:
             バージョン一覧
         """
         try:
-            response = self.version_api.get_version_milestone_list(project_id_or_key)
-            return json.loads(response.text)
+            # project_id_or_keyの型をstrに変換
+            project_key = str(project_id_or_key)
+            # get_version_milestone_listはstr | Noneを期待するため、Noneの可能性を排除
+            if project_key:
+                response = self.version_api.get_version_milestone_list(project_key)
+                if response and hasattr(response, 'text'):
+                    result: List[Dict[str, Any]] = json.loads(response.text)
+                    return result
+            return []
         except Exception as e:
             print(f"Error getting versions for project {project_id_or_key}: {e}")
             return []
 
     def get_version_id_by_name(
-        self, project_id_or_key: str, version_name: str
+        self, project_id_or_key: Union[str, int], version_name: str
     ) -> Optional[int]:
         """
         バージョン名からバージョンIDを取得
@@ -375,7 +458,7 @@ class BacklogClient:
         self,
         project_id: Optional[int] = None,
         project_key: Optional[str] = None,
-        summary: str = None,
+        summary: str = "",
         issue_type_id: Optional[int] = None,
         issue_type_name: Optional[str] = None,
         priority_id: Optional[int] = None,
@@ -430,7 +513,7 @@ class BacklogClient:
 
             # 課題種別IDの解決
             if issue_type_id is None and issue_type_name is not None:
-                issue_types = self.get_issue_types(project_id)
+                issue_types = self.get_issue_types(str(project_id))
                 for issue_type in issue_types:
                     if issue_type.get("name") == issue_type_name:
                         issue_type_id = issue_type.get("id")
@@ -448,7 +531,7 @@ class BacklogClient:
             if category_id is None and category_name is not None:
                 category_id = []
                 for name in category_name:
-                    cat_id = self.get_category_id_by_name(project_id, name)
+                    cat_id = self.get_category_id_by_name(str(project_id), name)
                     if cat_id:
                         category_id.append(cat_id)
 
@@ -456,7 +539,7 @@ class BacklogClient:
             if milestone_id is None and milestone_name is not None:
                 milestone_id = []
                 for name in milestone_name:
-                    ms_id = self.get_milestone_id_by_name(project_id, name)
+                    ms_id = self.get_milestone_id_by_name(str(project_id), name)
                     if ms_id:
                         milestone_id.append(ms_id)
 
@@ -464,40 +547,46 @@ class BacklogClient:
             if version_id is None and version_name is not None:
                 version_id = []
                 for name in version_name:
-                    ver_id = self.get_version_id_by_name(project_id, name)
+                    ver_id = self.get_version_id_by_name(str(project_id), name)
                     if ver_id:
                         version_id.append(ver_id)
 
             # 課題の作成
-            params = {
+            params: Dict[str, Any] = {
                 "project_id": project_id,
                 "summary": summary,
-                "description": description,
-                "start_date": start_date,
-                "due_date": due_date,
             }
 
-            if issue_type_id:
+            if description is not None:
+                params["description"] = description
+            if start_date is not None:
+                params["start_date"] = start_date
+            if due_date is not None:
+                params["due_date"] = due_date
+            if issue_type_id is not None:
                 params["issue_type_id"] = issue_type_id
 
             # 優先度IDが指定されていない場合は、デフォルト値（中）を設定
             # PyBacklogPyのIssue.add_issueメソッドではpriority_idが必須パラメータのため
-            if priority_id:
+            if priority_id is not None:
                 params["priority_id"] = priority_id
             else:
                 # デフォルト値として「中」の優先度ID（3）を設定
                 params["priority_id"] = 3
-            if assignee_id:
+            if assignee_id is not None:
                 params["assignee_id"] = assignee_id
-            if category_id:
+            if category_id is not None:
                 params["category_id"] = category_id
-            if milestone_id:
+            if milestone_id is not None:
                 params["milestone_id"] = milestone_id
-            if version_id:
+            if version_id is not None:
                 params["version_id"] = version_id
 
             response = self.issue_api.add_issue(**params)
-            return json.loads(response.text)
+            if response and hasattr(response, 'text'):
+                result: Dict[str, Any] = json.loads(response.text)
+                return result
+            return None
         except Exception as e:
             print(f"Error creating issue: {e}")
             return None
@@ -557,7 +646,8 @@ class BacklogClient:
 
             # ステータスIDの解決
             if status_id is None and status_name is not None:
-                status_id = self.get_status_id_by_name(project_id, status_name)
+                if project_id is not None:
+                    status_id = self.get_status_id_by_name(str(project_id), status_name)
 
             # 優先度IDの解決
             if priority_id is None and priority_name is not None:
@@ -571,50 +661,63 @@ class BacklogClient:
             if category_id is None and category_name is not None:
                 category_id = []
                 for name in category_name:
-                    cat_id = self.get_category_id_by_name(project_id, name)
-                    if cat_id:
+                    cat_id = None
+                    if project_id is not None and name is not None:
+                        cat_id = self.get_category_id_by_name(str(project_id), name)
+                    if cat_id is not None:
                         category_id.append(cat_id)
 
             # マイルストーンIDの解決
             if milestone_id is None and milestone_name is not None:
                 milestone_id = []
                 for name in milestone_name:
-                    ms_id = self.get_milestone_id_by_name(project_id, name)
-                    if ms_id:
+                    ms_id = None
+                    if project_id is not None and name is not None:
+                        ms_id = self.get_milestone_id_by_name(str(project_id), name)
+                    if ms_id is not None:
                         milestone_id.append(ms_id)
 
             # 発生バージョンIDの解決
             if version_id is None and version_name is not None:
                 version_id = []
                 for name in version_name:
-                    ver_id = self.get_version_id_by_name(project_id, name)
-                    if ver_id:
+                    ver_id = None
+                    if project_id is not None and name is not None:
+                        ver_id = self.get_version_id_by_name(str(project_id), name)
+                    if ver_id is not None:
                         version_id.append(ver_id)
 
             # 課題の更新
-            params = {
+            params: Dict[str, Any] = {
                 "issue_id_or_key": issue_id_or_key,
-                "summary": summary,
-                "description": description,
-                "start_date": start_date,
-                "due_date": due_date,
             }
 
-            if status_id:
+            if summary is not None:
+                params["summary"] = summary
+            if description is not None:
+                params["description"] = description
+            if start_date is not None:
+                params["start_date"] = start_date
+            if due_date is not None:
+                params["due_date"] = due_date
+            if status_id is not None:
                 params["status_id"] = status_id
-            if priority_id:
+            if priority_id is not None:
                 params["priority_id"] = priority_id
-            if assignee_id:
+            if assignee_id is not None:
                 params["assignee_id"] = assignee_id
-            if category_id:
+            if category_id is not None:
                 params["category_id"] = category_id
-            if milestone_id:
+            if milestone_id is not None:
                 params["milestone_id"] = milestone_id
-            if version_id:
+            if version_id is not None:
                 params["version_id"] = version_id
 
             response = self.issue_api.update_issue(**params)
-            return json.loads(response.text)
+            if response and hasattr(response, 'text'):
+                result: Dict[str, Any] = json.loads(response.text)
+                return result
+            return None
         except Exception as e:
             print(f"Error updating issue {issue_id_or_key}: {e}")
             return None
@@ -631,7 +734,7 @@ class BacklogClient:
         """
         try:
             response = self.issue_api.delete_issue(issue_id_or_key)
-            return response.ok
+            return bool(response.ok)
         except Exception as e:
             print(f"Error deleting issue {issue_id_or_key}: {e}")
             return False
@@ -653,7 +756,10 @@ class BacklogClient:
             response = self.issue_comment_api.add_comment(
                 issue_id_or_key=issue_id_or_key, content=content
             )
-            return json.loads(response.text)
+            if response and hasattr(response, 'text'):
+                result: Dict[str, Any] = json.loads(response.text)
+                return result
+            return None
         except Exception as e:
             print(f"Error adding comment to issue {issue_id_or_key}: {e}")
             return None
@@ -675,12 +781,17 @@ class BacklogClient:
             response = self.issue_comment_api.get_comment_list(
                 issue_id_or_key=issue_id_or_key, count=count
             )
-            return json.loads(response.text)
+            if response and hasattr(response, 'text'):
+                result: List[Dict[str, Any]] = json.loads(response.text)
+                return result
+            return []
         except Exception as e:
             print(f"Error getting comments for issue {issue_id_or_key}: {e}")
             return []
 
-    def get_issue_types(self, project_id_or_key: str) -> List[Dict[str, Any]]:
+    def get_issue_types(
+        self, project_id_or_key: Union[str, int]
+    ) -> List[Dict[str, Any]]:
         """
         課題の種別一覧を取得
 
@@ -691,8 +802,11 @@ class BacklogClient:
             課題の種別一覧
         """
         try:
-            response = self.issue_type_api.get_issue_type_list(project_id_or_key)
-            return json.loads(response.text)
+            # project_id_or_keyの型をstrに変換
+            project_key = str(project_id_or_key)
+            response = self.issue_type_api.get_issue_type_list(project_key)
+            result: List[Dict[str, Any]] = json.loads(response.text)
+            return result
         except Exception as e:
             print(f"Error getting issue types for project {project_id_or_key}: {e}")
             return []

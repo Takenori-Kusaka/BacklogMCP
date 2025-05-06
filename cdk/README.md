@@ -1,5 +1,78 @@
 # CloudFront + API Gateway + Lambda（Web Adapter）によるFastAPIホスティングアーキテクチャ設計書
 
+## 開発環境要件
+
+本プロジェクトの開発・テスト・デプロイには以下の環境が必要です：
+
+| ツール/ライブラリ | 必須バージョン | 備考 |
+|-----------------|--------------|------|
+| Node.js | 14.15.0以上 | 16.x以上推奨 |
+| npm | 6.14.0以上 | Node.jsに付属 |
+| AWS CDK | 2.x | `npm install -g aws-cdk` でインストール |
+| TypeScript | 4.9.x以上 | `npm install -g typescript` でインストール |
+| Python | 3.10以上 | FastAPI実装用 |
+| Docker | 最新版 | Lambdaコンテナイメージビルド用 |
+
+**注意**: Node.js 12.x以下では、AWS CDKライブラリの一部機能（オプショナルチェイニングなど）が正常に動作しません。必ず14.15.0以上のバージョンを使用してください。
+
+## 開発手順
+
+### 環境セットアップ
+
+1. 必要なツールのインストール
+   ```bash
+   # Node.jsのインストール（14.x以上）
+   curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - && sudo apt-get install -y nodejs
+
+   # 依存パッケージのインストール
+   cd cdk
+   npm install
+   ```
+
+2. ビルド
+   ```bash
+   npm run build
+   ```
+
+### テスト実行
+
+テストを実行する前に、Node.jsのバージョンが14.15.0以上であることを確認してください。
+
+```bash
+# 通常のテスト実行
+npm test
+
+# Node.jsバージョンチェック付きテスト実行（推奨）
+npm run test:safe
+```
+
+#### テスト結果の確認
+
+テストが失敗した場合や詳細な結果を確認したい場合は、`cdk`ディレクトリ直下に生成される `test-results.log` を確認してください。
+このファイルには、テスト実行時の標準出力と標準エラー出力が記録されています。
+
+```bash
+# test-results.log を確認する例
+cat test-results.log
+```
+
+**注意:** `test-results.log` は `.gitignore` に登録されており、Gitの追跡対象外です。
+
+### デプロイ
+
+環境ごとにデプロイコマンドが用意されています：
+
+```bash
+# 開発環境へのデプロイ
+npm run deploy:dev
+
+# ステージング環境へのデプロイ
+npm run deploy:stg
+
+# 本番環境へのデプロイ
+npm run deploy:prod
+```
+
 AWS環境におけるFastAPIアプリケーションのサーバーレスホスティングアーキテクチャを設計するにあたり、主要コンポーネントの連携とCDK実装戦略を詳細に検討します。本設計ではパフォーマンス最適化、セキュリティ強化、運用効率化の観点から技術選定を行いました[1][2][9][12]。
 
 ## アーキテクチャ全体像
@@ -7,12 +80,12 @@ AWS環境におけるFastAPIアプリケーションのサーバーレスホス�
 ```
 ┌──────────────────────────┐       ┌───────────────────┐
 │ クライアント             │       │ Amazon CloudFront  │
-│ (HTTPSリクエスト + APIキー) ├───────► キャッシュ層         │
+│ (HTTPSリクエスト + APIキー) ├───────► セキュリティレイヤー   │
 └──────────────────────────┘       └─────────┬─────────┘
                                              │
                                   ┌──────────▼──────────┐
-                                  │ API Gateway         │
-                                  │ (REST API + 使用量プラン) │
+                                  │ API Gateway HTTP    │
+                                  │ (FastAPIホスティング)  │
                                   └──────────┬──────────┘
                                              │
                                   ┌──────────▼──────────┐
@@ -25,8 +98,8 @@ AWS環境におけるFastAPIアプリケーションのサーバーレスホス�
 | 要素               | 技術選定理由                                                                 | 代替案リスク分析                     |
 |--------------------|----------------------------------------------------------------------------|-----------------------------------|
 | Lambda Web Adapter | 既存FastAPIコードの変更不要、ASGI互換性[2][11][20]                          | Mangum利用時はハンドラ修正必要[1][16]    |
-| CloudFront         | グローバルキャッシュ、WAF連携、カスタムドメイン管理[9][12][17]               | 直接API Gateway公開時のレイテンシ増加    |
-| API Gateway REST   | 使用量プラン管理、APIキー認証、リクエストバリデーション[4][6]                 | HTTP APIでは細粒度制御不可            |
+| CloudFront         | セキュリティヘッダー管理、WAF連携、カスタムドメイン管理[9][12][17]           | 直接API Gateway公開時のレイテンシ増加    |
+| API Gateway HTTP   | FastAPIのHTTPホスティング、APIキー認証、低コスト[4][6]                      | REST APIと比較して一部機能制限あり     |
 | CDK構成            | インフラのコード化、マルチリージョン展開可能性[5][7][9]                      | Terraform等他ツールとの統合難易度      |
 
 ## Lambda関数設計詳細
@@ -99,24 +172,53 @@ usagePlan.addApiKey(apiKey);
 ・キーローテーション：CDKデプロイ時の自動更新機能[6]  
 
 ## CloudFront統合設計
-### キャッシュポリシー最適化
+### 環境ごとのCloudFront統合設計（Agent対応）
+#### セキュリティ・WAF・ログ・出力例
+
+| 環境 | キャッシュTTL | WAF | CloudWatchアラーム | ログ保持 | プロビジョンド同時実行数 |
+|------|--------------|-----|-------------------|----------|-------------------------|
+| dev  | 0秒 (無効)   | 無  | 無                | 14日     | なし                    |
+| stg  | 0秒 (無効)   | オプション | 無         | 14日     | なし                    |
+| prod | 0秒 (無効)   | オプション | 有         | 30日     | なし                    |
+
+**注意**: 
+- CloudFrontのキャッシュは、Backlogのチケット更新をリアルタイムに反映するため、基本的に無効化しています
+- WAFはコスト対効果を考慮し、オプション機能として実装しています（必要に応じて有効化）
+- Lambdaのプロビジョンド同時実行数は、コスト最適化のため無効としています
+
 ```typescript
 new cloudfront.Distribution(this, 'ApiDistribution', {
   defaultBehavior: {
     origin: new origins.RestApiOrigin(api),
     cachePolicy: new cloudfront.CachePolicy(this, 'ApiCachePolicy', {
-      defaultTtl: Duration.seconds(10),
-      maxTtl: Duration.seconds(30),
+      defaultTtl: Duration.seconds(env === 'prod' ? 30 : env === 'stg' ? 10 : 5),
+      maxTtl: Duration.seconds(env === 'prod' ? 30 : env === 'stg' ? 10 : 5),
       enableAcceptEncodingBrotli: true,
       enableAcceptEncodingGzip: true
     }),
-    viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY
-  }
+    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
+    responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeaders', {
+      securityHeadersBehavior: {
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+        referrerPolicy: { referrerPolicy: cloudfront.HeadersReferrerPolicy.SAME_ORIGIN, override: true },
+        strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, override: true, preload: true },
+        xssProtection: { protection: true, modeBlock: true, override: true }
+      }
+    })
+  },
+  ...(env !== 'dev' && { webAclId: wafAcl.attrArn }),
+  // ログ設定・Geo制限・他
 });
 ```
-・動的コンテンツキャッシュ：TTL10秒設定[9][17]  
-・圧縮効率化：Brotli/Gzip対応[9][17]  
-・Geo Restriction：日本からのアクセスのみ許可[12]  
+・キャッシュTTL: dev=5秒, stg=10秒, prod=30秒  
+・セキュリティヘッダー: Content-Type-Options, Frame-Options, Referrer-Policy, Strict-Transport-Security, XSS-Protection  
+・HTTPS強制  
+・WAF（stg/prodのみ）: SQLインジェクション/レート制限  
+・CloudWatchアラーム（prodのみ）: Lambda/API Gateway 5xx/SNS通知  
+・ログ保持: dev/stg=14日, prod=30日  
+・Stack Outputs: 環境名/API Gateway URL/CloudFrontドメイン名/APIキーID  
+・Lambda: dev=512MB, stg=1024MB, prod=2048MB, タイムアウト30秒, prodのみプロビジョンド同時実行数10, 環境変数（TZ/NODE_ENV/LOG_LEVEL）
 
 ### セキュリティ強化設計
 ```typescript
@@ -144,13 +246,12 @@ const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'Securi
 ```
 ApiStack
 ├── FastAPILambda
-├── ApiGateway
-├── UsagePlan
-└── ApiKey
+├── HttpApiGateway
+└── ApiKey (オプション)
 
 CloudFrontStack
 └── Distribution
-    └── RestApiOrigin (ApiGateway)
+    └── HttpApiOrigin (ApiGateway)
 ```
 
 ### マルチ環境展開戦略

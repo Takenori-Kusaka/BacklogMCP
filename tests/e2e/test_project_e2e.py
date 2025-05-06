@@ -26,12 +26,21 @@ async def test_get_projects_from_real_api(mcp_server_url: str) -> None:
             # プロジェクト一覧取得
             result = await session.call_tool("get_projects", {})
             assert hasattr(result, "content")
-            assert isinstance(result.content, list)
-            # プロジェクトが存在する場合のみ検証
-            if result.content:
-                assert "id" in result.content[0]
-                assert "projectKey" in result.content[0]
-                assert "name" in result.content[0]
+            
+            # MCPのレスポンスはTextContent | ImageContent | EmbeddedResourceの配列
+            # TextContentの場合はJSON文字列をパースする必要がある
+            if result.content and len(result.content) > 0:
+                content_item = result.content[0]
+                if hasattr(content_item, "text"):
+                    # JSONをパース
+                    import json
+                    projects = json.loads(content_item.text)
+                    assert isinstance(projects, list)
+                    # プロジェクトが存在する場合のみ検証
+                    if projects:
+                        assert "id" in projects[0]
+                        assert "projectKey" in projects[0]
+                        assert "name" in projects[0]
 
 
 @pytest.mark.asyncio
@@ -54,7 +63,16 @@ async def test_get_project_by_key(mcp_server_url: str) -> None:
                 "get_project", {"project_key": project_key}
             )
             assert hasattr(result, "content")
-            assert isinstance(result.content, dict)
-            assert "id" in result.content
-            assert "projectKey" in result.content
-            assert result.content["projectKey"] == project_key
+            
+            # MCPのレスポンスはTextContent | ImageContent | EmbeddedResourceの配列
+            # TextContentの場合はJSON文字列をパースする必要がある
+            if result.content and len(result.content) > 0:
+                content_item = result.content[0]
+                if hasattr(content_item, "text"):
+                    # JSONをパース
+                    import json
+                    project = json.loads(content_item.text)
+                    assert isinstance(project, dict)
+                    assert "id" in project
+                    assert "projectKey" in project
+                    assert project["projectKey"] == project_key

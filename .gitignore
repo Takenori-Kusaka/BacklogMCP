@@ -49,3 +49,4 @@ htmlcov/
 /**/__pycache__/
 coverage.xml
 cdk/coverage/
+/bin/act

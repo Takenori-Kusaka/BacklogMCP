@@ -2,6 +2,7 @@
 テスト用のモックモジュール
 """
 
+from typing import Any, Dict, List, Optional, Union
 from unittest.mock import Mock
 
 
@@ -10,13 +11,13 @@ class MockBacklogClient:
     モックのBacklogクライアント
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """
         初期化
         """
         pass
 
-    def get_projects(self):
+    def get_projects(self) -> List[Dict[str, Any]]:
         """
         プロジェクト一覧を取得
 
@@ -28,7 +29,7 @@ class MockBacklogClient:
             {"id": 2, "projectKey": "TEST2", "name": "テストプロジェクト2"},
         ]
 
-    def get_project(self, project_key):
+    def get_project(self, project_key: str) -> Dict[str, Any]:
         """
         プロジェクトを取得
 
@@ -40,7 +41,7 @@ class MockBacklogClient:
         """
         return {"id": 1, "projectKey": "TEST1", "name": "テストプロジェクト1"}
 
-    def get_issues(self, **kwargs):
+    def get_issues(self, **kwargs) -> List[Dict[str, Any]]:
         """
         課題一覧を取得
 
@@ -52,7 +53,7 @@ class MockBacklogClient:
             {"id": 2, "issueKey": "TEST-2", "summary": "テスト課題2"},
         ]
 
-    def get_issue(self, issue_id_or_key):
+    def get_issue(self, issue_id_or_key: str) -> Dict[str, Any]:
         """
         課題情報を取得
 
@@ -64,7 +65,7 @@ class MockBacklogClient:
         """
         return {"id": 1, "issueKey": "TEST-1", "summary": "テスト課題1"}
 
-    def get_users(self):
+    def get_users(self) -> List[Dict[str, Any]]:
         """
         ユーザー一覧を取得
 
@@ -76,7 +77,7 @@ class MockBacklogClient:
             {"id": 2, "name": "テストユーザー2"},
         ]
 
-    def get_user_id_by_name(self, user_name):
+    def get_user_id_by_name(self, user_name: str) -> Optional[int]:
         """
         ユーザー名からユーザーIDを取得
 
@@ -89,7 +90,7 @@ class MockBacklogClient:
         users = {"テストユーザー1": 1, "テストユーザー2": 2}
         return users.get(user_name)
 
-    def get_priorities(self):
+    def get_priorities(self) -> List[Dict[str, Any]]:
         """
         優先度一覧を取得
 
@@ -102,7 +103,7 @@ class MockBacklogClient:
             {"id": 4, "name": "低"},
         ]
 
-    def get_priority_id_by_name(self, priority_name):
+    def get_priority_id_by_name(self, priority_name: str) -> Optional[int]:
         """
         優先度名から優先度IDを取得
 
@@ -115,7 +116,7 @@ class MockBacklogClient:
         priorities = {"高": 2, "中": 3, "低": 4}
         return priorities.get(priority_name)
 
-    def get_statuses(self, project_id_or_key):
+    def get_statuses(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         ステータス一覧を取得
 
@@ -132,7 +133,7 @@ class MockBacklogClient:
             {"id": 4, "name": "完了"},
         ]
 
-    def get_status_id_by_name(self, project_id_or_key, status_name):
+    def get_status_id_by_name(self, project_id_or_key: Union[str, int], status_name: str) -> Optional[int]:
         """
         ステータス名からステータスIDを取得
 
@@ -143,10 +144,12 @@ class MockBacklogClient:
         Returns:
             ステータスID
         """
+        if not status_name:
+            return None
         statuses = {"未対応": 1, "処理中": 2, "処理済み": 3, "完了": 4}
         return statuses.get(status_name)
 
-    def get_categories(self, project_id_or_key):
+    def get_categories(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         カテゴリー一覧を取得
 
@@ -162,7 +165,7 @@ class MockBacklogClient:
             {"id": 3, "name": "インフラ"},
         ]
 
-    def get_category_id_by_name(self, project_id_or_key, category_name):
+    def get_category_id_by_name(self, project_id_or_key: Union[str, int], category_name: str) -> Optional[int]:
         """
         カテゴリー名からカテゴリーIDを取得
 
@@ -176,7 +179,7 @@ class MockBacklogClient:
         categories = {"フロントエンド": 1, "バックエンド": 2, "インフラ": 3}
         return categories.get(category_name)
 
-    def get_milestones(self, project_id_or_key):
+    def get_milestones(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         マイルストーン一覧を取得
 
@@ -188,7 +191,7 @@ class MockBacklogClient:
         """
         return [{"id": 1, "name": "5月リリース"}, {"id": 2, "name": "6月リリース"}]
 
-    def get_milestone_id_by_name(self, project_id_or_key, milestone_name):
+    def get_milestone_id_by_name(self, project_id_or_key: Union[str, int], milestone_name: str) -> Optional[int]:
         """
         マイルストーン名からマイルストーンIDを取得
 
@@ -202,7 +205,7 @@ class MockBacklogClient:
         milestones = {"5月リリース": 1, "6月リリース": 2}
         return milestones.get(milestone_name)
 
-    def get_versions(self, project_id_or_key):
+    def get_versions(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         バージョン一覧を取得
 
@@ -218,7 +221,7 @@ class MockBacklogClient:
             {"id": 3, "name": "v1.2.0"},
         ]
 
-    def get_version_id_by_name(self, project_id_or_key, version_name):
+    def get_version_id_by_name(self, project_id_or_key: Union[str, int], version_name: str) -> Optional[int]:
         """
         バージョン名からバージョンIDを取得
 
@@ -232,7 +235,7 @@ class MockBacklogClient:
         versions = {"v1.0.0": 1, "v1.1.0": 2, "v1.2.0": 3}
         return versions.get(version_name)
 
-    def get_issue_types(self, project_id_or_key):
+    def get_issue_types(self, project_id_or_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         課題種別一覧を取得
 
@@ -248,7 +251,7 @@ class MockBacklogClient:
             {"id": 3, "name": "要望"},
         ]
 
-    def create_issue(self, **kwargs):
+    def create_issue(self, **kwargs) -> Dict[str, Any]:
         """
         課題を作成
 
@@ -257,38 +260,42 @@ class MockBacklogClient:
         """
         # プロジェクトキーからプロジェクトIDを解決
         if kwargs.get("project_id") is None and kwargs.get("project_key") is not None:
-            project = self.get_project(kwargs.get("project_key"))
-            if project:
-                kwargs["project_id"] = project.get("id")
+            project_key = kwargs.get("project_key")
+            if project_key is not None:  # Noneチェックを追加
+                project = self.get_project(project_key)
+                if project:
+                    kwargs["project_id"] = project.get("id")
 
         # 課題種別名から課題種別IDを解決
         if (
             kwargs.get("issue_type_id") is None
             and kwargs.get("issue_type_name") is not None
         ):
-            issue_types = self.get_issue_types(kwargs.get("project_key") or "TEST1")
-            for issue_type in issue_types:
-                if issue_type.get("name") == kwargs.get("issue_type_name"):
-                    kwargs["issue_type_id"] = issue_type.get("id")
-                    break
+            project_key = kwargs.get("project_key") or "TEST1"
+            if project_key is not None:  # Noneチェックを追加
+                issue_types = self.get_issue_types(project_key)
+                for issue_type in issue_types:
+                    if issue_type.get("name") == kwargs.get("issue_type_name"):
+                        kwargs["issue_type_id"] = issue_type.get("id")
+                        break
 
         # 優先度名から優先度IDを解決
         if (
             kwargs.get("priority_id") is None
             and kwargs.get("priority_name") is not None
         ):
-            kwargs["priority_id"] = self.get_priority_id_by_name(
-                kwargs.get("priority_name")
-            )
+            priority_name = kwargs.get("priority_name")
+            if priority_name is not None:  # Noneチェックを追加
+                kwargs["priority_id"] = self.get_priority_id_by_name(priority_name)
 
         # 担当者名から担当者IDを解決
         if (
             kwargs.get("assignee_id") is None
             and kwargs.get("assignee_name") is not None
         ):
-            kwargs["assignee_id"] = self.get_user_id_by_name(
-                kwargs.get("assignee_name")
-            )
+            assignee_name = kwargs.get("assignee_name")
+            if assignee_name is not None:  # Noneチェックを追加
+                kwargs["assignee_id"] = self.get_user_id_by_name(assignee_name)
 
         return {
             "id": 1,
@@ -296,7 +303,7 @@ class MockBacklogClient:
             "summary": kwargs.get("summary", "新しい課題"),
         }
 
-    def update_issue(self, issue_id_or_key, **kwargs):
+    def update_issue(self, issue_id_or_key: str, **kwargs) -> Dict[str, Any]:
         """
         課題を更新
 
@@ -308,27 +315,27 @@ class MockBacklogClient:
         """
         # ステータス名からステータスIDを解決
         if kwargs.get("status_id") is None and kwargs.get("status_name") is not None:
-            kwargs["status_id"] = self.get_status_id_by_name(
-                1, kwargs.get("status_name")
-            )
+            status_name = kwargs.get("status_name")
+            if status_name is not None:  # Noneチェックを追加
+                kwargs["status_id"] = self.get_status_id_by_name(1, status_name)
 
         # 優先度名から優先度IDを解決
         if (
             kwargs.get("priority_id") is None
             and kwargs.get("priority_name") is not None
         ):
-            kwargs["priority_id"] = self.get_priority_id_by_name(
-                kwargs.get("priority_name")
-            )
+            priority_name = kwargs.get("priority_name")
+            if priority_name is not None:  # Noneチェックを追加
+                kwargs["priority_id"] = self.get_priority_id_by_name(priority_name)
 
         # 担当者名から担当者IDを解決
         if (
             kwargs.get("assignee_id") is None
             and kwargs.get("assignee_name") is not None
         ):
-            kwargs["assignee_id"] = self.get_user_id_by_name(
-                kwargs.get("assignee_name")
-            )
+            assignee_name = kwargs.get("assignee_name")
+            if assignee_name is not None:  # Noneチェックを追加
+                kwargs["assignee_id"] = self.get_user_id_by_name(assignee_name)
 
         return {
             "id": 1,
@@ -336,7 +343,7 @@ class MockBacklogClient:
             "summary": kwargs.get("summary", "更新された課題"),
         }
 
-    def delete_issue(self, issue_id_or_key):
+    def delete_issue(self, issue_id_or_key: str) -> bool:
         """
         課題を削除
 
@@ -348,7 +355,7 @@ class MockBacklogClient:
         """
         return True
 
-    def add_comment(self, issue_id_or_key, content):
+    def add_comment(self, issue_id_or_key: str, content: str) -> Dict[str, Any]:
         """
         課題にコメントを追加
 
@@ -361,7 +368,7 @@ class MockBacklogClient:
         """
         return {"id": 1, "content": "テストコメント"}
 
-    def get_issue_comments(self, issue_id_or_key, **kwargs):
+    def get_issue_comments(self, issue_id_or_key: str, **kwargs) -> List[Dict[str, Any]]:
         """
         課題のコメント一覧を取得
 
@@ -379,7 +386,7 @@ class MockProjectService:
     モックのプロジェクト管理サービス
     """
 
-    def __init__(self, backlog_client=None):
+    def __init__(self, backlog_client=None) -> None:
         """
         初期化
 
@@ -388,7 +395,7 @@ class MockProjectService:
         """
         self.backlog_client = backlog_client or MockBacklogClient()
 
-    def get_projects(self):
+    def get_projects(self) -> List[Dict[str, Any]]:
         """
         プロジェクト一覧を取得
 
@@ -397,7 +404,7 @@ class MockProjectService:
         """
         return self.backlog_client.get_projects()
 
-    def get_project(self, project_key):
+    def get_project(self, project_key: str) -> Dict[str, Any]:
         """
         プロジェクトを取得
 
@@ -415,7 +422,7 @@ class MockIssueService:
     モックの課題管理サービス
     """
 
-    def __init__(self, backlog_client=None):
+    def __init__(self, backlog_client=None) -> None:
         """
         初期化
 
@@ -425,8 +432,9 @@ class MockIssueService:
         self.backlog_client = backlog_client or MockBacklogClient()
 
     def get_issues(
-        self, project_id=None, status_id=None, assignee_id=None, keyword=None, count=20
-    ):
+        self, project_id: Optional[int] = None, status_id: Optional[Union[int, List[int]]] = None, 
+        assignee_id: Optional[int] = None, keyword: Optional[str] = None, count: int = 20
+    ) -> List[Dict[str, Any]]:
         """
         課題一覧を取得
 
@@ -451,7 +459,7 @@ class MockIssueService:
         except Exception as e:
             raise Exception(f"Failed to get issues: {str(e)}")
 
-    def get_issue(self, issue_id_or_key):
+    def get_issue(self, issue_id_or_key: str) -> Dict[str, Any]:
         """
         課題情報を取得
 
@@ -468,25 +476,25 @@ class MockIssueService:
 
     def create_issue(
         self,
-        project_id=None,
-        project_key=None,
-        summary=None,
-        issue_type_id=None,
-        issue_type_name=None,
-        priority_id=None,
-        priority_name=None,
-        description=None,
-        assignee_id=None,
-        assignee_name=None,
-        category_id=None,
-        category_name=None,
-        milestone_id=None,
-        milestone_name=None,
-        version_id=None,
-        version_name=None,
-        start_date=None,
-        due_date=None,
-    ):
+        project_id: Optional[int] = None,
+        project_key: Optional[str] = None,
+        summary: Optional[str] = None,
+        issue_type_id: Optional[int] = None,
+        issue_type_name: Optional[str] = None,
+        priority_id: Optional[int] = None,
+        priority_name: Optional[str] = None,
+        description: Optional[str] = None,
+        assignee_id: Optional[int] = None,
+        assignee_name: Optional[str] = None,
+        category_id: Optional[List[int]] = None,
+        category_name: Optional[List[str]] = None,
+        milestone_id: Optional[List[int]] = None,
+        milestone_name: Optional[List[str]] = None,
+        version_id: Optional[List[int]] = None,
+        version_name: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        due_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         課題を作成
 
@@ -539,24 +547,24 @@ class MockIssueService:
 
     def update_issue(
         self,
-        issue_id_or_key,
-        summary=None,
-        description=None,
-        status_id=None,
-        status_name=None,
-        priority_id=None,
-        priority_name=None,
-        assignee_id=None,
-        assignee_name=None,
-        category_id=None,
-        category_name=None,
-        milestone_id=None,
-        milestone_name=None,
-        version_id=None,
-        version_name=None,
-        start_date=None,
-        due_date=None,
-    ):
+        issue_id_or_key: str,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        status_id: Optional[int] = None,
+        status_name: Optional[str] = None,
+        priority_id: Optional[int] = None,
+        priority_name: Optional[str] = None,
+        assignee_id: Optional[int] = None,
+        assignee_name: Optional[str] = None,
+        category_id: Optional[List[int]] = None,
+        category_name: Optional[List[str]] = None,
+        milestone_id: Optional[List[int]] = None,
+        milestone_name: Optional[List[str]] = None,
+        version_id: Optional[List[int]] = None,
+        version_name: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        due_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         課題を更新
 
@@ -605,7 +613,7 @@ class MockIssueService:
         except Exception as e:
             raise Exception(f"Failed to update issue: {str(e)}")
 
-    def delete_issue(self, issue_id_or_key):
+    def delete_issue(self, issue_id_or_key: str) -> bool:
         """
         課題を削除
 
@@ -620,7 +628,7 @@ class MockIssueService:
         except Exception as e:
             raise Exception(f"Failed to delete issue: {str(e)}")
 
-    def add_comment(self, issue_id_or_key, content):
+    def add_comment(self, issue_id_or_key: str, content: str) -> Dict[str, Any]:
         """
         課題にコメントを追加
 
@@ -638,7 +646,7 @@ class MockIssueService:
         except Exception as e:
             raise Exception(f"Failed to add comment: {str(e)}")
 
-    def get_issue_comments(self, issue_id_or_key, count=20):
+    def get_issue_comments(self, issue_id_or_key: str, count: int = 20) -> List[Dict[str, Any]]:
         """
         課題のコメント一覧を取得
 
@@ -656,7 +664,7 @@ class MockIssueService:
         except Exception as e:
             raise Exception(f"Failed to get comments: {str(e)}")
 
-    def get_issue_types(self, project_key):
+    def get_issue_types(self, project_key: Union[str, int]) -> List[Dict[str, Any]]:
         """
         課題種別一覧を取得
 

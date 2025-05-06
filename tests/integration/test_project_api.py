@@ -30,9 +30,11 @@ class TestProjectIntegration:
     def test_get_projects_from_real_api(self, env_vars: dict[str, str | None]) -> None:
         """実際のBacklog APIからプロジェクト一覧を取得するテスト"""
         # テスト対象のクライアントをインスタンス化
-        backlog_client = BacklogClient(
-            api_key=env_vars["api_key"], space=env_vars["space"]
-        )
+        api_key = env_vars["api_key"]
+        space = env_vars["space"]
+        if api_key is None or space is None:
+            pytest.skip("API Key または Space が設定されていません")
+        backlog_client = BacklogClient(api_key=api_key, space=space)
 
         # プロジェクト一覧を取得
         projects = backlog_client.get_projects()
@@ -54,12 +56,15 @@ class TestProjectIntegration:
     def test_get_project_by_key(self, env_vars: dict[str, str | None]) -> None:
         """特定のプロジェクトキーでプロジェクトを取得するテスト"""
         # テスト対象のクライアントをインスタンス化
-        backlog_client = BacklogClient(
-            api_key=env_vars["api_key"], space=env_vars["space"]
-        )
+        api_key = env_vars["api_key"]
+        space = env_vars["space"]
+        project_key = env_vars["project"]
+        if api_key is None or space is None or project_key is None:
+            pytest.skip("API Key, Space または Project が設定されていません")
+        backlog_client = BacklogClient(api_key=api_key, space=space)
 
         # プロジェクトを取得
-        project = backlog_client.get_project(env_vars["project"])
+        project = backlog_client.get_project(project_key)
 
         # 結果の検証
         assert project is not None

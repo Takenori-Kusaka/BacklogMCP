@@ -7,6 +7,7 @@ import signal
 import socket
 import subprocess
 import time
+from typing import Dict, Generator, List, Optional, Union
 from unittest.mock import Mock
 
 import pytest
@@ -117,12 +118,12 @@ def is_port_in_use(port: int) -> bool:
 
 
 @pytest.fixture(scope="session")
-def mcp_server_process() -> str:
+def mcp_server_process() -> Generator[str, None, None]:
     """
     テスト用のMCPサーバープロセスを起動するフィクスチャ
 
     Returns:
-        str: MCPサーバーのURL
+        Generator[str, None, None]: MCPサーバーのURL
     """
     # サーバーのポート
     port = 8000
@@ -226,12 +227,12 @@ def mcp_server_process() -> str:
 
 # # 簡易的なmcp_server_processフィクスチャ
 # @pytest.fixture(scope="session")
-# def mcp_server_process():
+# def mcp_server_process() -> Generator[str, None, None]:
 #     """
 #     テスト用のMCPサーバープロセスを起動するフィクスチャ（簡易版）
 #
 #     Returns:
-#         str: MCPサーバーのURL
+#         Generator[str, None, None]: MCPサーバーのURL
 #     """
 #     # 手動で起動したサーバーのURLを返す
 #     server_url = "http://127.0.0.1:8000"
@@ -248,12 +249,12 @@ def mcp_server_url(mcp_server_process: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def env_vars() -> dict[str, str | None]:
+def env_vars() -> Dict[str, Optional[str]]:
     """
     環境変数を読み込むフィクスチャ
 
     Returns:
-        dict: 環境変数の辞書
+        Dict[str, Optional[str]]: 環境変数の辞書
     """
     return {
         "api_key": os.getenv("BACKLOG_API_KEY"),
@@ -263,7 +264,7 @@ def env_vars() -> dict[str, str | None]:
 
 
 @pytest.fixture(scope="session")
-def backlog_client(env_vars: dict[str, str | None]) -> "BacklogClient | None":
+def backlog_client(env_vars: Dict[str, Optional[str]]):
     """
     実際のBacklogクライアントのインスタンスを作成するフィクスチャ
 
@@ -271,7 +272,7 @@ def backlog_client(env_vars: dict[str, str | None]) -> "BacklogClient | None":
         env_vars: 環境変数の辞書
 
     Returns:
-        BacklogClient: 実際のBacklogクライアントのインスタンス
+        Optional[BacklogClient]: 実際のBacklogクライアントのインスタンス
     """
     from app.infrastructure.backlog.backlog_client import BacklogClient
 

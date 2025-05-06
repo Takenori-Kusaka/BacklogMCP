@@ -88,7 +88,7 @@ class IssueService:
         self,
         project_id: Optional[int] = None,
         project_key: Optional[str] = None,
-        summary: Optional[str] = "",
+        summary: str = "",
         issue_type_id: Optional[int] = None,
         issue_type_name: Optional[str] = None,
         priority_id: Optional[int] = None,

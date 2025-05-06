@@ -3,7 +3,7 @@
 """
 
 import os
-from typing import Any
+from typing import Any, Generator
 
 import pytest
 from dotenv import load_dotenv
@@ -27,26 +27,34 @@ class TestIssueIntegration:
     @pytest.fixture(scope="class")
     def backlog_client(self, env_vars: dict[str, str | None]) -> BacklogClient:
         """BacklogClientのインスタンスを作成するフィクスチャ"""
-        return BacklogClient(api_key=env_vars["api_key"], space=env_vars["space"])
+        api_key = env_vars["api_key"]
+        space = env_vars["space"]
+        if api_key is None or space is None:
+            pytest.skip("API Key または Space が設定されていません")
+        return BacklogClient(api_key=api_key, space=space)
 
     @pytest.fixture(scope="class")
     def test_issue(
         self, backlog_client: BacklogClient, env_vars: dict[str, str | None]
-    ) -> dict[str, Any]:
+    ) -> Generator[dict[str, Any], None, None]:
         """テスト用の課題を作成するフィクスチャ"""
+        project_key = env_vars["project"]
+        if project_key is None:
+            pytest.skip("Project が設定されていません")
+            
         # プロジェクトIDを取得
         projects = backlog_client.get_projects()
         project_id = None
         for project in projects:
-            if project["projectKey"] == env_vars["project"]:
+            if project["projectKey"] == project_key:
                 project_id = project["id"]
                 break
 
         if not project_id:
-            pytest.skip(f"Project {env_vars['project']} not found")
+            pytest.skip(f"Project {project_key} not found")
 
         # 課題の種別IDを取得
-        issue_types = backlog_client.get_issue_types(env_vars["project"])
+        issue_types = backlog_client.get_issue_types(project_key)
         if not issue_types:
             pytest.skip("No issue types found")
         issue_type_id = issue_types[0]["id"]
@@ -60,6 +68,9 @@ class TestIssueIntegration:
             description="これは結合テスト用の課題です。",
         )
 
+        if issue is None:
+            pytest.skip("Failed to create test issue")
+            
         yield issue
 
         # テスト後にクリーンアップ
@@ -197,19 +208,23 @@ class TestIssueIntegration:
         self, backlog_client: BacklogClient, env_vars: dict[str, str | None]
     ) -> None:
         """課題を作成して削除するテスト"""
+        project_key = env_vars["project"]
+        if project_key is None:
+            pytest.skip("Project が設定されていません")
+            
         # プロジェクトIDを取得
         projects = backlog_client.get_projects()
         project_id = None
         for project in projects:
-            if project["projectKey"] == env_vars["project"]:
+            if project["projectKey"] == project_key:
                 project_id = project["id"]
                 break
 
         if not project_id:
-            pytest.skip(f"Project {env_vars['project']} not found")
+            pytest.skip(f"Project {project_key} not found")
 
         # 課題の種別IDを取得
-        issue_types = backlog_client.get_issue_types(env_vars["project"])
+        issue_types = backlog_client.get_issue_types(project_key)
         if not issue_types:
             pytest.skip("No issue types found")
         issue_type_id = issue_types[0]["id"]

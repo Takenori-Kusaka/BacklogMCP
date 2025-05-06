@@ -74,11 +74,11 @@ class TestIssueService:
         issue_service = MockIssueService(backlog_client=mock_backlog_client)
 
         # ステータスIDでフィルタリングして課題一覧を取得
-        issues = issue_service.get_issues(status_id=[2])
+        issues = issue_service.get_issues(status_id=2)
 
         # モックが正しいパラメータで呼ばれたことを確認
         mock_backlog_client.get_issues.assert_called_once_with(
-            project_id=None, status_id=[2], assignee_id=None, keyword=None, count=20
+            project_id=None, status_id=2, assignee_id=None, keyword=None, count=20
         )
 
         # 結果の検証

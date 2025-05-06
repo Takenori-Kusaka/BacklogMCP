@@ -1254,6 +1254,24 @@ files = [
 test = ["enum34 ; python_version <= \"3.4\"", "ipaddress ; python_version < \"3.0\"", "mock ; python_version < \"3.0\"", "pywin32 ; sys_platform == \"win32\"", "wmi ; sys_platform == \"win32\""]
 
 [[package]]
+name = "pybacklogpy"
+version = "0.12.1"
+description = "A library for backlog api"
+optional = false
+python-versions = ">=3.5"
+groups = ["main"]
+files = [
+    {file = "pybacklogpy-0.12.1-py3-none-any.whl", hash = "sha256:42a151e9178868a673d0a6afe9661a1d146437fb2ca2ad3b618d095671449b04"},
+]
+
+[package.dependencies]
+requests = ">=2.32.3"
+
+[package.source]
+type = "file"
+url = "reference/pybacklogpy-0.12.1-py3-none-any.whl"
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
@@ -2390,4 +2408,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "08c38f1293ba1c97046cde02b63c5d1c1a2b38426f35dd0f9d45bd5dd1c2d7aa"
+content-hash = "48211edf3155c04ec8643d2ea9babc3cb48c41085df9d35f254ffb966eff631a"

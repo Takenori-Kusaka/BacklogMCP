@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi_mcp import FastApiMCP
+from fastapi_mcp import FastApiMCP  # type: ignore
 from mangum import Mangum
 
 # 環境変数の読み込み
@@ -122,8 +122,11 @@ def start() -> None:
     """
     import uvicorn
 
+    # 開発環境では0.0.0.0を使用し、本番環境では特定のインターフェースを使用する
+    # セキュリティ上の理由から、デフォルトではlocalhostを使用
+    host = os.getenv("HOST", "127.0.0.1")
     uvicorn.run(
-        "app.main:app", host="0.0.0.0", port=int(os.getenv("PORT", "8000")), reload=True
+        "app.main:app", host=host, port=int(os.getenv("PORT", "8000")), reload=True
     )
 
 
