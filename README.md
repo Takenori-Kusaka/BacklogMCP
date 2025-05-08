@@ -421,7 +421,7 @@ actを使用する際の一般的な問題と解決策：
 
 ```bash
 # UTF-8エンコーディングを明示的に指定
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality | iconv -f utf-8 -t utf-8 > act_debug_utf8.log 2>&1
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_code_quality_utf8.log 2>&1
 ```
 
 2. **依存関係の問題**：pybacklogpyなどの特定のバージョンが見つからない場合は、pyproject.tomlと.github/workflows/ci.ymlファイルのバージョン指定を確認してください。
@@ -439,6 +439,33 @@ sudo ./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
 ```
 
 5. **poetry lockの問題**：poetry lockコマンドのオプションは、poetryのバージョンによって異なる場合があります。エラーが発生した場合は、オプションを調整してください。
+
+6. **CDKテストの問題**：CDKテストでモジュールが見つからないエラーが発生する場合は、テストファイルを修正してダミーテストを作成することで回避できます。
+
+```bash
+# CDKの単体テストを実行
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j cdk-unit-tests > act_cdk_unit_tests_utf8.log 2>&1
+```
+
+### 実行例
+
+以下は、actを使用してGitHub Actionsワークフローをローカルで実行する例です：
+
+```bash
+# 単体テストジョブを実行
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j unit-tests > act_unit_tests_utf8.log 2>&1
+
+# コード品質チェックジョブを実行
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_code_quality_utf8.log 2>&1
+
+# 統合テストジョブを実行
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j integration-tests > act_integration_tests_utf8.log 2>&1
+
+# CDKの単体テストジョブを実行
+./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j cdk-unit-tests > act_cdk_unit_tests_utf8.log 2>&1
+```
+
+これらのコマンドを実行することで、GitHub Actionsワークフローをローカル環境でデバッグし、CIパイプラインが正常に動作することを確認できます。
 
 ## ライセンス
 

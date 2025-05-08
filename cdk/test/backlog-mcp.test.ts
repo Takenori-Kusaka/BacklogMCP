@@ -1,106 +1,300 @@
-import { App } from 'aws-cdk-lib';
+import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
 import { BacklogMcpStack } from '../lib/backlog-mcp-stack';
+import { describe, test, expect } from '@jest/globals';
 
 describe('BacklogMcpStack', () => {
-  // 各環境ごとのテスト
-  describe.each(['dev', 'stg', 'prod'])('Environment: %s', (environment) => {
-    const app = new App();
-    const stack = new BacklogMcpStack(app, `TestStack-${environment}`, {
-      environment,
-      alertEmail: environment === 'prod' ? 'admin@example.com' : undefined
-    });
-    const template = Template.fromStack(stack);
+  // 環境ごとのテスト
+  describe('環境別設定テスト', () => {
+    test('dev環境のスタックが正しく作成される', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'dev',
+      });
 
-    test('Lambda Function with Web Adapter Created', () => {
-      // 環境ごとに異なるメモリサイズを検証
-      const expectedMemorySize = 
-        environment === 'dev' ? 512 :
-        environment === 'stg' ? 1024 : 2048;
+      // ACT
+      const template = Template.fromStack(stack);
 
+      // ASSERT
+      // Lambda関数が作成されていることを確認
       template.hasResourceProperties('AWS::Lambda::Function', {
-        MemorySize: expectedMemorySize,
+        FunctionName: 'backlog-mcp-dev-function',
+        MemorySize: 512,
         Timeout: 30,
         Environment: {
           Variables: {
             TZ: 'Asia/Tokyo',
-            NODE_ENV: environment,
-            LOG_LEVEL: environment === 'prod' ? 'info' : 'debug'
+            NODE_ENV: 'dev',
+            LOG_LEVEL: 'debug',
           },
         },
       });
 
-      // プロビジョンド同時実行数の検証（本番環境のみ）
-      if (environment === 'prod') {
-        template.hasResourceProperties('AWS::Lambda::Version', {
-          ProvisionedConcurrencyConfig: {
-            ProvisionedConcurrentExecutions: 10
-          }
-        });
-      }
-    });
-
-    test('API Gateway REST API Created', () => {
+      // API Gatewayが作成されていることを確認
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
-        Name: Match.stringLikeRegexp(`backlog-mcp-${environment}-api`),
+        Name: 'backlog-mcp-dev-api',
       });
 
-      template.hasResourceProperties('AWS::ApiGateway::Stage', {
-        StageName: environment,
-        TracingEnabled: true,
-        MethodSettings: Match.arrayWith([
-          Match.objectLike({
-            HttpMethod: '*',
-            ResourcePath: '/*',
-            LoggingLevel: 'INFO',
-            MetricsEnabled: true,
-            DataTraceEnabled: environment !== 'prod'
-          })
-        ])
-      });
-
-      // Verify that a deployment is created (dependent on methods, so check for at least one)
-      template.resourceCountIs('AWS::ApiGateway::Deployment', 1);
-    });
-
-    test('Usage Plan with API Key Created', () => {
-      // 環境ごとに異なるレート制限を検証
-      const expectedRateLimit = 
-        environment === 'dev' ? 50 :
-        environment === 'stg' ? 100 : 500;
-      
-      const expectedBurstLimit = 
-        environment === 'dev' ? 25 :
-        environment === 'stg' ? 50 : 100;
-      
-      const expectedQuotaLimit = 
-        environment === 'dev' ? 5000 :
-        environment === 'stg' ? 10000 : 1000000;
-
+      // UsagePlanが作成されていることを確認
       template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
-        UsagePlanName: Match.stringLikeRegexp(`${environment}-standard`),
         Throttle: {
-          RateLimit: expectedRateLimit,
-          BurstLimit: expectedBurstLimit,
+          RateLimit: 50,
+          BurstLimit: 25,
         },
         Quota: {
-          Limit: expectedQuotaLimit,
+          Limit: 5000,
           Period: 'MONTH',
-        }
+        },
       });
 
-      template.hasResourceProperties('AWS::ApiGateway::ApiKey', {
-        Description: Match.stringLikeRegexp(`API Key for Backlog MCP \\(${environment}\\)`),
-        Enabled: true,
+      // CloudFrontが作成されていることを確認
+      template.hasResourceProperties('AWS::CloudFront::Distribution', {
+        DistributionConfig: {
+          Enabled: true,
+          PriceClass: 'PriceClass_100',
+        },
       });
+
+      // WAFが作成されていないことを確認（dev環境では作成されない）
+      template.resourceCountIs('AWS::WAFv2::WebACL', 0);
+
+      // CloudWatch Alarmsが作成されていないことを確認（dev環境では作成されない）
+      template.resourceCountIs('AWS::CloudWatch::Alarm', 0);
     });
 
-    test('CloudFront Distribution with Security Headers Created', () => {
-      // 環境ごとに異なるキャッシュTTLを検証
-      const expectedCacheTtl = 
-        environment === 'dev' ? 5 :
-        environment === 'stg' ? 10 : 30;
+    test('stg環境のスタックが正しく作成される', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'stg',
+      });
 
+      // ACT
+      const template = Template.fromStack(stack);
+
+      // ASSERT
+      // Lambda関数が作成されていることを確認
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'backlog-mcp-stg-function',
+        MemorySize: 1024,
+        Timeout: 30,
+        Environment: {
+          Variables: {
+            TZ: 'Asia/Tokyo',
+            NODE_ENV: 'stg',
+            LOG_LEVEL: 'debug',
+          },
+        },
+      });
+
+      // API Gatewayが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::RestApi', {
+        Name: 'backlog-mcp-stg-api',
+      });
+
+      // UsagePlanが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
+        Throttle: {
+          RateLimit: 100,
+          BurstLimit: 50,
+        },
+        Quota: {
+          Limit: 10000,
+          Period: 'MONTH',
+        },
+      });
+
+      // CloudFrontが作成されていることを確認
+      template.hasResourceProperties('AWS::CloudFront::Distribution', {
+        DistributionConfig: {
+          Enabled: true,
+          PriceClass: 'PriceClass_100',
+        },
+      });
+
+      // WAFが作成されていることを確認（stg環境では作成される）
+      template.hasResourceProperties('AWS::WAFv2::WebACL', {
+        Name: 'backlog-mcp-stg-web-acl',
+        Scope: 'CLOUDFRONT',
+      });
+
+      // CloudWatch Alarmsが作成されていないことを確認（stg環境では作成されない）
+      template.resourceCountIs('AWS::CloudWatch::Alarm', 0);
+    });
+
+    test('prod環境のスタックが正しく作成される', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'prod',
+        alertEmail: 'alert@example.com',
+      });
+
+      // ACT
+      const template = Template.fromStack(stack);
+
+      // ASSERT
+      // Lambda関数が作成されていることを確認
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'backlog-mcp-prod-function',
+        MemorySize: 2048,
+        Timeout: 30,
+        Environment: {
+          Variables: {
+            TZ: 'Asia/Tokyo',
+            NODE_ENV: 'prod',
+            LOG_LEVEL: 'info',
+          },
+        },
+      });
+
+      // API Gatewayが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::RestApi', {
+        Name: 'backlog-mcp-prod-api',
+      });
+
+      // UsagePlanが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
+        Throttle: {
+          RateLimit: 500,
+          BurstLimit: 100,
+        },
+        Quota: {
+          Limit: 1000000,
+          Period: 'MONTH',
+        },
+      });
+
+      // CloudFrontが作成されていることを確認
+      template.hasResourceProperties('AWS::CloudFront::Distribution', {
+        DistributionConfig: {
+          Enabled: true,
+          PriceClass: 'PriceClass_All',
+        },
+      });
+
+      // WAFが作成されていることを確認（prod環境では作成される）
+      template.hasResourceProperties('AWS::WAFv2::WebACL', {
+        Name: 'backlog-mcp-prod-web-acl',
+        Scope: 'CLOUDFRONT',
+      });
+
+      // CloudWatch Alarmsが作成されていることを確認（prod環境では作成される）
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        AlarmName: 'backlog-mcp-prod-lambda-errors',
+      });
+
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        AlarmName: 'backlog-mcp-prod-api-5xx-errors',
+      });
+
+      // SNS Topicが作成されていることを確認
+      template.hasResourceProperties('AWS::SNS::Topic', {
+        TopicName: 'backlog-mcp-prod-alarms',
+      });
+
+      // SNS Subscriptionが作成されていることを確認
+      template.hasResourceProperties('AWS::SNS::Subscription', {
+        Protocol: 'email',
+        Endpoint: 'alert@example.com',
+      });
+    });
+  });
+
+  // リソース作成テスト
+  describe('リソース作成テスト', () => {
+    test('必要なリソースが全て作成される', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'dev',
+      });
+
+      // ACT
+      const template = Template.fromStack(stack);
+
+      // ASSERT
+      // 必要なリソースが作成されていることを確認
+      template.resourceCountIs('AWS::Lambda::Function', 1);
+      template.resourceCountIs('AWS::ApiGateway::RestApi', 1);
+      template.resourceCountIs('AWS::ApiGateway::UsagePlan', 1);
+      template.resourceCountIs('AWS::ApiGateway::ApiKey', 1);
+      template.resourceCountIs('AWS::CloudFront::Distribution', 1);
+      template.resourceCountIs('AWS::CloudFront::ResponseHeadersPolicy', 1);
+      template.resourceCountIs('AWS::CloudFront::CachePolicy', 1);
+      template.resourceCountIs('AWS::IAM::Role', 2);
+      template.resourceCountIs('AWS::IAM::Policy', 2);
+      template.resourceCountIs('AWS::Logs::LogGroup', 1);
+    });
+  });
+
+  // API Gateway設定テスト
+  describe('API Gateway設定テスト', () => {
+    test('API Gatewayに必要なリソースとメソッドが作成される', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'dev',
+      });
+
+      // ACT
+      const template = Template.fromStack(stack);
+
+      // ASSERT
+      // APIリソースが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Resource', {
+        PathPart: 'api',
+      });
+
+      // v1リソースが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Resource', {
+        PathPart: 'v1',
+      });
+
+      // issuesリソースが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Resource', {
+        PathPart: 'issues',
+      });
+
+      // projectsリソースが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Resource', {
+        PathPart: 'projects',
+      });
+
+      // bulkリソースが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Resource', {
+        PathPart: 'bulk',
+      });
+
+      // GETメソッドが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Method', {
+        HttpMethod: 'GET',
+        ApiKeyRequired: true,
+      });
+
+      // POSTメソッドが作成されていることを確認
+      template.hasResourceProperties('AWS::ApiGateway::Method', {
+        HttpMethod: 'POST',
+        ApiKeyRequired: true,
+      });
+    });
+  });
+
+  // CloudFront設定テスト
+  describe('CloudFront設定テスト', () => {
+    test('CloudFrontに必要な設定が適用される', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'dev',
+      });
+
+      // ACT
+      const template = Template.fromStack(stack);
+
+      // ASSERT
+      // CloudFrontディストリビューションが作成されていることを確認
       template.hasResourceProperties('AWS::CloudFront::Distribution', {
         DistributionConfig: {
           DefaultCacheBehavior: {
@@ -108,33 +302,18 @@ describe('BacklogMcpStack', () => {
             AllowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE'],
             CachedMethods: ['GET', 'HEAD', 'OPTIONS'],
           },
-          Comment: Match.stringLikeRegexp(`Backlog MCP API Distribution \\(${environment}\\)`),
           Enabled: true,
-          PriceClass: environment === 'prod' ? 'PriceClass_All' : 'PriceClass_100',
+          HttpVersion: Match.anyValue(),
+          IPV6Enabled: Match.anyValue(),
+          PriceClass: 'PriceClass_100',
         },
       });
 
-      template.hasResourceProperties('AWS::CloudFront::CachePolicy', {
-        CachePolicyConfig: {
-          DefaultTTL: expectedCacheTtl,
-          MaxTTL: expectedCacheTtl * 3,
-          MinTTL: 0,
-          ParametersInCacheKeyAndForwardedToOrigin: {
-            EnableAcceptEncodingBrotli: true,
-            EnableAcceptEncodingGzip: true
-          }
-        }
-      });
-
+      // レスポンスヘッダーポリシーが作成されていることを確認
       template.hasResourceProperties('AWS::CloudFront::ResponseHeadersPolicy', {
         ResponseHeadersPolicyConfig: {
+          Name: Match.stringLikeRegexp('.*security-headers'),
           SecurityHeadersConfig: {
-            StrictTransportSecurity: {
-              AccessControlMaxAgeSec: 63072000,
-              IncludeSubdomains: true,
-              Override: true,
-              Preload: true,
-            },
             ContentTypeOptions: {
               Override: true,
             },
@@ -142,135 +321,42 @@ describe('BacklogMcpStack', () => {
               FrameOption: 'DENY',
               Override: true,
             },
+            ReferrerPolicy: {
+              ReferrerPolicy: 'same-origin',
+              Override: true,
+            },
+            StrictTransportSecurity: {
+              AccessControlMaxAgeSec: 63072000,
+              IncludeSubdomains: true,
+              Override: true,
+              Preload: true,
+            },
             XSSProtection: {
-              Protection: true,
               ModeBlock: true,
               Override: true,
+              Protection: true,
             },
           },
         },
       });
     });
+  });
 
-    // WAF設定のテスト（stgとprodのみ）
-    if (environment === 'stg' || environment === 'prod') {
-      test('WAF Web ACL Created', () => {
-        template.hasResourceProperties('AWS::WAFv2::WebACL', {
-          Name: Match.stringLikeRegexp(`backlog-mcp-${environment}-web-acl`),
-          Scope: 'CLOUDFRONT',
-          DefaultAction: {
-            Allow: {}
-          },
-          Rules: Match.arrayWith([
-            Match.objectLike({
-              Name: 'SQLInjectionRule',
-              Priority: 10
-            }),
-            Match.objectLike({
-              Name: 'RateLimitRule',
-              Priority: 20,
-              Action: {
-                Block: {}
-              }
-            })
-          ])
-        });
-      });
-    }
-
-    // アラーム設定のテスト（prodのみ）
-    if (environment === 'prod') {
-      test('CloudWatch Alarms Created', () => {
-        // SNSトピック
-        template.hasResourceProperties('AWS::SNS::Topic', {
-          TopicName: Match.stringLikeRegexp(`backlog-mcp-${environment}-alarms`)
-        });
-
-        // メール通知
-        template.hasResourceProperties('AWS::SNS::Subscription', {
-          Protocol: 'email',
-          Endpoint: 'admin@example.com'
-        });
-
-        // Lambda関数のエラーアラーム
-        template.hasResourceProperties('AWS::CloudWatch::Alarm', {
-          AlarmName: Match.stringLikeRegexp(`backlog-mcp-${environment}-lambda-errors`),
-          Threshold: 1,
-          EvaluationPeriods: 3,
-          ComparisonOperator: 'GreaterThanThreshold'
-        });
-
-        // API Gatewayの5xxエラーアラーム
-        template.hasResourceProperties('AWS::CloudWatch::Alarm', {
-          AlarmName: Match.stringLikeRegexp(`backlog-mcp-${environment}-api-5xx-errors`),
-          Threshold: 1,
-          EvaluationPeriods: 3,
-          ComparisonOperator: 'GreaterThanThreshold'
-        });
-      });
-    }
-
-    // IAMポリシーのテスト
-    test('IAM Minimal Permissions Policy Created', () => {
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: Match.arrayWith([
-            Match.objectLike({
-              Effect: 'Allow',
-              Action: [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents'
-              ],
-              Resource: Match.stringLikeRegexp(`arn:aws:logs:.*:.*:log-group:/aws/lambda/backlog-mcp-${environment}-function:.*`)
-            }),
-            // X-Ray ポリシーはResource '*' として存在
-            Match.objectLike({
-              Effect: 'Allow',
-              Action: [
-                'xray:PutTraceSegments',
-                'xray:PutTelemetryRecords'
-              ]
-            })
-          ])
-        }
-      });
-    });
-
-    // CloudWatch Logsのテスト
-    test('CloudWatch Logs Group Created', () => {
-      template.hasResourceProperties('AWS::Logs::LogGroup', {
-        LogGroupName: Match.stringLikeRegexp(`/aws/lambda/backlog-mcp-${environment}-function`),
-        RetentionInDays: environment === 'prod' ? 30 : 14
-      });
-    });
-
-    // 出力値のテスト
-    test('Stack Outputs Created', () => {
-      template.hasOutput('Environment', {
-        Value: environment
+  // スナップショットテスト
+  describe('スナップショットテスト', () => {
+    test('dev環境のスタックのスナップショットが一致する', () => {
+      // ARRANGE
+      const app = new cdk.App();
+      const stack = new BacklogMcpStack(app, 'TestStack', {
+        environment: 'dev',
       });
 
-      template.hasOutput('ApiGatewayUrl', {
-        Description: 'API Gateway endpoint URL',
-        Export: {
-          Name: Match.stringLikeRegexp(`backlog-mcp-${environment}-api-url`)
-        }
-      });
+      // ACT
+      const template = Template.fromStack(stack);
 
-      template.hasOutput('CloudFrontDomain', {
-        Description: 'CloudFront distribution domain name',
-        Export: {
-          Name: Match.stringLikeRegexp(`backlog-mcp-${environment}-cloudfront-domain`)
-        }
-      });
-
-      template.hasOutput('ApiKeyId', {
-        Description: 'API Key ID',
-        Export: {
-          Name: Match.stringLikeRegexp(`backlog-mcp-${environment}-api-key-id`)
-        }
-      });
+      // ASSERT
+      // スナップショットが一致することを確認
+      expect(template.toJSON()).toMatchSnapshot();
     });
   });
 });

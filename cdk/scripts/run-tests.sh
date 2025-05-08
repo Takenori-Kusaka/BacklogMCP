@@ -27,4 +27,4 @@ fi
 
 # テストを実行
 echo "テストを実行中..."
-npm test > test-results.log 2>&1
+npm test -- --no-cache

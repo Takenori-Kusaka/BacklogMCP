@@ -22,8 +22,7 @@
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "outDir": "./dist"
   },
   "exclude": [
     "node_modules",
