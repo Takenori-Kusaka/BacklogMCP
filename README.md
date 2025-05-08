@@ -366,18 +366,17 @@ GitHub Actionsのワークフローをローカル環境でデバッグするた
 
 ### actのインストール
 
-actはすでにリポジトリの`bin`ディレクトリに含まれていますが、必要に応じて以下のコマンドでインストールすることもできます：
+以下のコマンドでWSL上にactをインストールできます。公式インストールスクリプトまたはsnapを利用してください：
 
 ```bash
-# バイナリをダウンロードして実行権限を付与
-curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+# 公式スクリプトでインストール
+curl -sSL https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+
+# または snap からインストール (snapd が必要)
+sudo snap install act --classic
 ```
 
-または、リポジトリに含まれているactを使用する場合は、実行権限を付与します：
-
-```bash
-chmod +x ./bin/act
-```
+インストール後は `which act` でパスを確認し、システムのパスにある `act` コマンドを使用してワークフローを実行します。
 
 ### ワークフローのデバッグ手順
 
@@ -385,7 +384,7 @@ chmod +x ./bin/act
 
 ```bash
 # コード品質チェックジョブを実行する例
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
 ```
 
 2. **ログファイルに出力する**
@@ -394,7 +393,7 @@ WSL環境でログファイルに出力する場合は、UTF-8エンコーディ
 
 ```bash
 # ログファイルにUTF-8エンコードで出力
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_debug_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_debug_utf8.log 2>&1
 ```
 
 3. **コンテナサイズを指定する**
@@ -403,14 +402,14 @@ actはDockerコンテナを使用してワークフローを実行します。�
 
 ```bash
 # コンテナのメモリ制限を4GBに設定
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality --container-options="-m 4GB"
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality --container-options="-m 4GB"
 ```
 
 4. **特定のイベントをトリガーとして実行**
 
 ```bash
 # プルリクエストイベントをトリガーとして実行
-./bin/act pull_request -P ubuntu-latest=catthehacker/ubuntu:act-latest
+act pull_request -P ubuntu-latest=catthehacker/ubuntu:act-latest
 ```
 
 ### トラブルシューティング
@@ -421,7 +420,7 @@ actを使用する際の一般的な問題と解決策：
 
 ```bash
 # UTF-8エンコーディングを明示的に指定
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_code_quality_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_code_quality_utf8.log 2>&1
 ```
 
 2. **依存関係の問題**：pybacklogpyなどの特定のバージョンが見つからない場合は、pyproject.tomlと.github/workflows/ci.ymlファイルのバージョン指定を確認してください。
@@ -429,13 +428,13 @@ actを使用する際の一般的な問題と解決策：
 3. **メモリ不足エラー**：Dockerコンテナのメモリ制限を増やしてください。
 
 ```bash
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality --container-options="-m 8GB"
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality --container-options="-m 8GB"
 ```
 
 4. **権限の問題**：WSL環境でactを実行する際に権限の問題が発生する場合は、sudoを使用するか、適切な権限を設定してください。
 
 ```bash
-sudo ./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
+sudo act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
 ```
 
 5. **poetry lockの問題**：poetry lockコマンドのオプションは、poetryのバージョンによって異なる場合があります。エラーが発生した場合は、オプションを調整してください。
@@ -444,7 +443,7 @@ sudo ./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
 
 ```bash
 # CDKの単体テストを実行
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j cdk-unit-tests > act_cdk_unit_tests_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j cdk-unit-tests > act_cdk_unit_tests_utf8.log 2>&1
 ```
 
 ### 実行例
@@ -453,16 +452,16 @@ sudo ./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality
 
 ```bash
 # 単体テストジョブを実行
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j unit-tests > act_unit_tests_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j unit-tests > act_unit_tests_utf8.log 2>&1
 
 # コード品質チェックジョブを実行
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_code_quality_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j code-quality > act_code_quality_utf8.log 2>&1
 
 # 統合テストジョブを実行
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j integration-tests > act_integration_tests_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j integration-tests > act_integration_tests_utf8.log 2>&1
 
 # CDKの単体テストジョブを実行
-./bin/act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j cdk-unit-tests > act_cdk_unit_tests_utf8.log 2>&1
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest -j cdk-unit-tests > act_cdk_unit_tests_utf8.log 2>&1
 ```
 
 これらのコマンドを実行することで、GitHub Actionsワークフローをローカル環境でデバッグし、CIパイプラインが正常に動作することを確認できます。

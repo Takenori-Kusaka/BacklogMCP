@@ -2,10 +2,13 @@
 一括操作の結合テスト
 """
 
+import os
 import pytest
 from fastapi.testclient import TestClient
+from unittest.mock import patch
 
 from app.main import app
+from tests.mocks import MockBacklogClient
 
 
 @pytest.fixture
@@ -14,6 +17,20 @@ def client() -> TestClient:
     テストクライアント
     """
     return TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def mock_env_vars():
+    """
+    環境変数をモックするフィクスチャ
+    GitHub Actionsでの実行時に環境変数が設定されていない場合に備えて、
+    テスト用の環境変数を設定する
+    """
+    with patch.dict(os.environ, {
+        "BACKLOG_API_KEY": "dummy_api_key",
+        "BACKLOG_SPACE": "dummy_space"
+    }):
+        yield
 
 
 class TestBulkOperationsIntegration:

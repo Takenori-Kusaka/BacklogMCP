@@ -50,3 +50,4 @@ htmlcov/
 coverage.xml
 cdk/coverage/
 /bin/act
+*.snap
