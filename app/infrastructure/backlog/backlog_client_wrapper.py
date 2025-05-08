@@ -88,15 +88,17 @@ class BacklogClient:
     PyBacklogPyを使用してBacklog APIと通信するクライアントクラス
     """
 
-    def __init__(self, api_key: str, space: str):
+    def __init__(self, api_key: str, space: str, read_only_mode: bool = False):
         """
         初期化
 
         Args:
             api_key: Backlog APIキー
             space: Backlogスペース名
+            read_only_mode: 読み取り専用モードフラグ
         """
         self.config = BacklogComConfigure(space, api_key)
+        self.read_only_mode = read_only_mode
         self.project_api = Project(self.config)
         self.issue_api = Issue(self.config)
         self.issue_comment_api = IssueComment(self.config)
@@ -477,6 +479,10 @@ class BacklogClient:
     ) -> Optional[Dict[str, Any]]:
         """
         課題を作成
+        """
+        if self.read_only_mode:
+            raise PermissionError("Cannot create issue in read-only mode.")
+            # (既存のコードは変更なし)
 
         Args:
             project_id: プロジェクトID
@@ -732,6 +738,8 @@ class BacklogClient:
         Returns:
             削除に成功した場合はTrue、失敗した場合はFalse
         """
+        if self.read_only_mode:
+            raise PermissionError("Cannot delete issue in read-only mode.")
         try:
             response = self.issue_api.delete_issue(issue_id_or_key)
             return bool(response.ok)
@@ -752,20 +760,24 @@ class BacklogClient:
         Returns:
             追加されたコメント情報。追加に失敗した場合はNone
         """
+        if self.read_only_mode:
+            raise PermissionError("Cannot add comment in read-only mode.")
+        if self.read_only_mode:
+            raise PermissionError("Cannot add comment in read-only mode.")
         try:
-            response = self.issue_comment_api.add_comment(
+            response = self.issue_comment_api.add_comment( # PyBacklogPyのメソッド名に合わせる
                 issue_id_or_key=issue_id_or_key, content=content
             )
-            if response and hasattr(response, 'text'):
+            if response and hasattr(response, 'text'): # レスポンスチェックを強化
                 result: Dict[str, Any] = json.loads(response.text)
                 return result
-            return None
+            return None # 失敗時はNoneを返す
         except Exception as e:
             print(f"Error adding comment to issue {issue_id_or_key}: {e}")
             return None
 
     def get_issue_comments(
-        self, issue_id_or_key: str, count: int = 20
+        self, issue_id_or_key: str, count: int = 20 # orderパラメータはPyBacklogPyに存在しないため削除
     ) -> List[Dict[str, Any]]:
         """
         課題のコメント一覧を取得

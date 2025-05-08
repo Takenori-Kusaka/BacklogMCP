@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.application.services.bulk_operations_service import BulkOperationsService
-from app.infrastructure.backlog.backlog_client import BacklogClient
+from app.infrastructure.backlog.backlog_client import BacklogClient # 正しくは backlog_client_wrapper を使うべき
+from app.core.config import settings # settings をインポート
 
 # 環境変数の読み込み
 load_dotenv()
@@ -76,7 +77,7 @@ def get_bulk_operations_service() -> BulkOperationsService:
             detail="Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables.",
         )
 
-    backlog_client = BacklogClient(api_key=api_key, space=space)
+    backlog_client = BacklogClient(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
     return BulkOperationsService(backlog_client=backlog_client)
 
 

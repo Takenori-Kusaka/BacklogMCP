@@ -5,10 +5,13 @@ BacklogMCP - メインアプリケーション
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.status import HTTP_403_FORBIDDEN
 from fastapi_mcp import FastApiMCP  # type: ignore
+
+from app.core.config import settings
 from mangum import Mangum
 
 # 環境変数の読み込み
@@ -37,6 +40,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Read-only mode middleware
+@app.middleware("http")
+async def read_only_middleware(request: Request, call_next):
+    if settings.READ_ONLY_MODE and request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Application is in read-only mode. Write operations are disabled.",
+        )
+    response = await call_next(request)
+    return response
 
 # APIルーターの登録
 app.include_router(project_router)

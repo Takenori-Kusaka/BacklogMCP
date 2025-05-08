@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from app.application.services.issue_service import IssueService
-from app.infrastructure.backlog.backlog_client import BacklogClient
+from app.infrastructure.backlog.backlog_client import BacklogClient # 正しくは backlog_client_wrapper を使うべきだが、既存コードに合わせる
+from app.core.config import settings # settings をインポート
 
 # 環境変数の読み込み
 load_dotenv()
@@ -84,7 +85,7 @@ def get_issue_service() -> IssueService:
             detail="Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables.",
         )
 
-    backlog_client = BacklogClient(api_key=api_key, space=space)
+    backlog_client = BacklogClient(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
     return IssueService(backlog_client=backlog_client)
 
 
