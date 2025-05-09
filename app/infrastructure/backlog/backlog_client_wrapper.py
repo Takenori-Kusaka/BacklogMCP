@@ -484,15 +484,14 @@ class BacklogClient:
             raise PermissionError("Cannot create issue in read-only mode.")
             # (既存のコードは変更なし)
 
-        Args:
-            project_id: プロジェクトID
-            project_key: プロジェクトキー（project_idが指定されていない場合に使用）
-            summary: 課題の件名
-            issue_type_id: 課題の種別ID
-            issue_type_name: 課題の種別名（issue_type_idが指定されていない場合に使用）
-            priority_id: 優先度ID
-            priority_name: 優先度名（priority_idが指定されていない場合に使用）
-            description: 課題の詳細
+        project_id: プロジェクトID
+        project_key: プロジェクトキー（project_idが指定されていない場合に使用）
+        summary: 課題の件名
+        issue_type_id: 課題の種別ID
+        issue_type_name: 課題の種別名（issue_type_idが指定されていない場合に使用）
+        priority_id: 優先度ID
+        priority_name: 優先度名（priority_idが指定されていない場合に使用）
+        description: 課題の詳細
             assignee_id: 担当者ID
             assignee_name: 担当者名（assignee_idが指定されていない場合に使用）
             category_id: カテゴリーIDのリスト

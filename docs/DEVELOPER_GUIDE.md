@@ -155,6 +155,103 @@ BacklogMCP/
 ### テスト失敗時の対応ルール
 - テストで失敗が発生した場合、テストをスキップ（skip）したり、passやassert True等で無意味に通過させるのではなく、テストの意義を確認し、必要に応じて実装やテスト自体を修正し、正しくテストが通る状態にすること。
 
+## AWS CDK
+
+BacklogMCPはAWS CDKを使用してインフラストラクチャをコード化しています。CDKプロジェクトは`cdk/`ディレクトリに配置されています。
+
+### CDKプロジェクト構造
+
+```
+cdk/
+├── bin/                  # CDKアプリケーションのエントリーポイント
+│   ├── app.ts            # CDKアプリケーションの定義
+│   └── cdk.ts            # CDKコマンドラインツールのエントリーポイント
+├── lib/                  # CDKスタックの定義
+│   └── backlog-mcp-stack.ts  # BacklogMCPのインフラスタック定義
+├── src/                  # TypeScriptソースコード
+│   ├── bin/              # ビルド後のエントリーポイント
+│   ├── lib/              # ビルド後のスタック定義
+│   └── test/             # テストコード
+├── test/                 # テストコード
+│   └── backlog-mcp.test.ts  # スタックのテスト
+├── scripts/              # スクリプト
+│   └── run-tests.sh      # テスト実行スクリプト
+├── cdk.json              # CDK設定ファイル
+├── package.json          # npm設定ファイル
+└── tsconfig.json         # TypeScript設定ファイル
+```
+
+### CDKスタック
+
+`BacklogMcpStack`は以下のAWSリソースを定義しています：
+
+- **Lambda関数**: FastAPIアプリケーションを実行するためのLambda関数
+- **API Gateway**: RESTful APIエンドポイントを提供するためのAPI Gateway
+- **CloudFront**: コンテンツ配信とキャッシュを担当するCloudFrontディストリビューション
+- **WAF**: セキュリティを強化するためのWAF（Web Application Firewall）
+- **CloudWatch**: モニタリングとアラートのためのCloudWatchアラーム
+- **SNS**: アラート通知のためのSNSトピック
+
+### CDKテスト
+
+CDKプロジェクトには、以下のテストが含まれています：
+
+- **環境別設定テスト**: 各環境（dev、stg、prod）のスタックが正しく作成されることを確認
+- **リソース作成テスト**: 必要なリソースが全て作成されることを確認
+- **API Gateway設定テスト**: API Gatewayに必要なリソースとメソッドが作成されることを確認
+- **CloudFront設定テスト**: CloudFrontに必要な設定が適用されることを確認
+- **スナップショットテスト**: スタックのスナップショットが一致することを確認
+
+テストを実行するには、以下のコマンドを使用します：
+
+```bash
+cd cdk
+npm test -- --no-watchman
+```
+
+または、スクリプトを使用して実行することもできます：
+
+```bash
+cd cdk
+bash scripts/run-tests.sh
+```
+
+> **注意**: テスト実行時に`--no-watchman`オプションを使用することで、Jestのレポーターのエラーを回避できます。
+
+### CDKテストのトラブルシューティング
+
+#### 問題: テスト実行時に「Cannot find module '../lib/backlog-mcp-stack'」エラーが発生する
+
+この問題は、TypeScriptのコンパイル設定で`lib`、`bin`、`test`ディレクトリが除外されているために発生します。
+
+**解決策**: `tsconfig.json`ファイルを修正して、これらのディレクトリを除外しないようにします。
+
+```json
+{
+  "exclude": [
+    "node_modules",
+    "cdk.out",
+    "dist"
+  ]
+}
+```
+
+#### 問題: テスト実行時に「RangeError: Invalid count value」エラーが発生する
+
+この問題は、Jestのレポーターのバグによって発生します。
+
+**解決策**: テスト実行時に`--no-watchman`オプションを追加します。
+
+```bash
+npm test -- --no-watchman
+```
+
+または、`scripts/run-tests.sh`スクリプトを修正して、このオプションを追加します。
+
+```bash
+npm test -- --no-cache --no-watchman
+```
+
 ## テスト戦略
 
 BacklogMCPは、以下の6つのレベルでテストを実施します：

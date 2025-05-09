@@ -27,4 +27,4 @@ fi
 
 # テストを実行
 echo "テストを実行中..."
-npm test -- --no-cache
+npm test -- --no-cache --no-watchman
