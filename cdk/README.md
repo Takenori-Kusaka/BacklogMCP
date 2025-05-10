@@ -58,6 +58,66 @@ cat test-results.log
 
 **注意:** `test-results.log` は `.gitignore` に登録されており、Gitの追跡対象外です。
 
+### ローカルでのCDKコード検証
+
+デプロイ前にローカル環境でCDKコードの妥当性を確認することで、エラーを早期に発見できます。
+
+1.  **前提条件の確認**:
+    *   **AWS認証情報**: ローカル環境でAWS CLIが設定され、CDKがデプロイ対象のAWSアカウント・リージョンにアクセスできる認証情報（アクセスキー、シークレットキー、セッショントークン、または名前付きプロファイル）が正しく設定されていることを確認してください。
+        ```bash
+        aws sts get-caller-identity
+        ```
+    *   **Node.jsとnpm**: 本ドキュメントの「開発環境要件」セクション記載のバージョン要件を満たしていることを確認してください。
+    *   **AWS CDK CLI**: グローバルにインストールされていることを確認してください。
+        ```bash
+        npm install -g aws-cdk
+        cdk --version
+        ```
+    *   **プロジェクト依存関係**: `cdk` ディレクトリで必要なNode.jsモジュールがインストールされていることを確認してください。
+        ```bash
+        cd cdk
+        npm install # または npm ci
+        cd ..
+        ```
+
+2.  **`cdk synth` (スタックの合成)**:
+    CloudFormationテンプレートを生成し、構文エラーなどがないか確認します。
+    ターミナルで `cdk` ディレクトリに移動し、以下のコマンドを実行します。
+    ```bash
+    cd cdk
+    # 例: dev環境の場合
+    cdk synth --context environment=dev
+    
+    # 例: prod環境で、アラートメールも指定する場合 (alertEmailはスタックのPropsで定義されていれば)
+    # cdk synth --context environment=prod --context alertEmail=your-alert-email@example.com
+    cd ..
+    ```
+    エラーメッセージが表示されず、CloudFormationテンプレートが標準出力に表示されれば、基本的な合成は成功です。
+
+3.  **`cdk diff` (差分確認 - オプション)**:
+    もし既に対象環境にデプロイ済みのスタックがある場合、現在のコードとの差分を確認できます。
+    ```bash
+    cd cdk
+    # 例: dev環境の場合
+    cdk diff --context environment=dev
+    cd ..
+    ```
+
+4.  **`cdk deploy --dry-run` (デプロイのドライラン - オプション)**:
+    実際にAWSリソースに変更を加えることなく、デプロイプロセスをシミュレートします。必要なIAM権限のチェックなども行われます。
+    ```bash
+    cd cdk
+    # 例: dev環境で、AWSプロファイル 'your-profile' を使用する場合
+    # aws-vault exec your-profile -- cdk deploy --dry-run --context environment=dev
+    # または、プロファイルがデフォルト設定されていれば
+    # cdk deploy --dry-run --context environment=dev
+    cd ..
+    ```
+    `aws-vault exec your-profile --` の部分は、ご自身のAWS認証情報の管理方法に合わせて調整してください。
+    エラーが発生しなければ、デプロイに必要な準備（権限など）が整っている可能性が高いです。
+
+これらのコマンドをローカルで実行し、問題がないことを確認した上でコミット・プッシュすることを推奨します。
+
 ### デプロイ
 
 環境ごとにデプロイコマンドが用意されています：

@@ -3,8 +3,10 @@
     "target": "ES2018",
     "module": "commonjs",
     "lib": [
-      "es2020"
+      "es2020",
+      "dom"
     ],
+    "skipLibCheck": true,
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -38,6 +40,7 @@
   "include": [
     "src/**/*",
     "test/**/*",
-    "bin/**/*"
+    "bin/**/*",
+    "lib/**/*"
   ]
 }

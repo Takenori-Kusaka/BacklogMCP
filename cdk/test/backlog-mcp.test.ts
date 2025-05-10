@@ -224,8 +224,8 @@ describe('BacklogMcpStack', () => {
       template.resourceCountIs('AWS::CloudFront::ResponseHeadersPolicy', 1);
       template.resourceCountIs('AWS::CloudFront::CachePolicy', 1);
       template.resourceCountIs('AWS::IAM::Role', 2);
-      // AWS::IAM::Policyリソースはインラインポリシーを使用しているため、0になります
-      template.resourceCountIs('AWS::IAM::Policy', 0);
+      // AWS::IAM::Policyリソースの数を確認
+      template.resourceCountIs('AWS::IAM::Policy', 2);
       template.resourceCountIs('AWS::Logs::LogGroup', 1);
     });
   });

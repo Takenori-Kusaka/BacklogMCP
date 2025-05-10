@@ -1,20 +1,25 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { CdkStack } from '../lib/cdk-stack';
+import { BacklogMcpStack } from '../lib/backlog-mcp-stack';
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+// 環境変数から取得するか、コンテキストから取得
+const environment = app.node.tryGetContext('environment') || process.env.ENVIRONMENT || 'dev';
+const alertEmail = app.node.tryGetContext('alertEmail') || process.env.ALERT_EMAIL;
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+// スタック名に環境名を含める
+const stackName = `BacklogMcpStack-${environment}`;
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+// スタックの作成
+new BacklogMcpStack(app, stackName, {
+  environment: environment,
+  alertEmail: alertEmail,
+  /* For environment-agnostic stacks, we don't specify 'env' so that the stack can be deployed anywhere.
+   * For local debugging and testing, we don't need to specify AWS account and region. */
 });
+
+// タグの追加
+cdk.Tags.of(app).add('Environment', environment);
+cdk.Tags.of(app).add('Project', 'BacklogMCP');
+cdk.Tags.of(app).add('ManagedBy', 'CDK');

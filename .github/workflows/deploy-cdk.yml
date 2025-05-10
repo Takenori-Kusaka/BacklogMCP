@@ -45,6 +45,13 @@ jobs:
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
 
+      - name: Set AWS Account and Region env vars for CDK
+        run: |
+          echo "CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
+          echo "CDK_DEFAULT_REGION=${{ env.AWS_REGION }}" >> $GITHUB_ENV
+        env:
+          AWS_REGION: us-east-1 # Ensure this matches the region used in configure-aws-credentials
+
       - name: CDK Bootstrap (ignore if already bootstrapped)
         working-directory: cdk
         run: cdk bootstrap --require-approval never || true

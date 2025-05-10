@@ -2,13 +2,12 @@
   "name": "backlog-mcp-cdk",
   "version": "0.1.0",
   "bin": {
-    "cdk": "dist/bin/app.js"
+    "cdk": "dist/bin/cdk.js"
   },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --coverage",
-    "test:safe": "./scripts/run-tests.sh",
     "cdk": "cdk",
     "deploy:dev": "cdk deploy --context environment=dev",
     "deploy:stg": "cdk deploy --context environment=stg",
