@@ -184,6 +184,10 @@ jobs:
         working-directory: cdk
         run: npm ci
 
+      - name: Build CDK TypeScript code
+        working-directory: cdk
+        run: npm run build
+
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
 
