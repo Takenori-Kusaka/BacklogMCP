@@ -87,8 +87,8 @@ export class BacklogMcpStack extends cdk.Stack {
     // Lambda Function with Web Adapter
     const lambdaFunction = new lambda.DockerImageFunction(this, 'BacklogMcpFunction', {
       functionName: `backlog-mcp-${environment}-function`,
-      code: lambda.DockerImageCode.fromImageAsset('../app', {
-        file: '../docker/Dockerfile',
+      code: lambda.DockerImageCode.fromImageAsset('../../', {
+        file: 'docker/Dockerfile',
       }),
       memorySize: config.lambda.memorySize,
       timeout: Duration.seconds(config.lambda.timeout),
