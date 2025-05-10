@@ -174,10 +174,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js 16.x
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install CDK dependencies
@@ -193,4 +193,4 @@ jobs:
 
       - name: Run CDK unit tests
         working-directory: cdk
-        run: bash scripts/run-tests.sh
+        run: npm test
