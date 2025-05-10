@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
 from pydantic import BaseModel
 
 from app.application.services.bulk_operations_service import BulkOperationsService
@@ -77,7 +78,7 @@ def get_bulk_operations_service() -> BulkOperationsService:
             detail="Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables.",
         )
 
-    backlog_client = BacklogClient(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
+    backlog_client = BacklogClientWrapper(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
     return BulkOperationsService(backlog_client=backlog_client)
 
 

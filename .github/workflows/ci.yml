@@ -153,7 +153,7 @@ jobs:
         
     - name: アプリケーションの起動
       run: |
-        poetry run python -m app.main &
+        poetry run python -m app.main --port 8001 &
         echo "アプリケーションを起動しました。5秒待機します..."
         sleep 5
         

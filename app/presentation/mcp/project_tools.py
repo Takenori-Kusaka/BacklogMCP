@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 from mcp.types import Tool
 
 from app.application.services.project_service import ProjectService
-from app.infrastructure.backlog.backlog_client import BacklogClient
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
+from app.core.config import settings
 
 # 環境変数の読み込み
 load_dotenv()
@@ -30,7 +31,7 @@ def get_project_service() -> ProjectService:
             "Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables."
         )
 
-    backlog_client = BacklogClient(api_key=api_key, space=space)
+    backlog_client = BacklogClientWrapper(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
     return ProjectService(backlog_client=backlog_client)
 
 

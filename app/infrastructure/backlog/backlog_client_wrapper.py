@@ -81,7 +81,7 @@ from pybacklogpy.User import User
 from pybacklogpy.Version import Version
 
 
-class BacklogClient:
+class BacklogClientWrapper:
     """
     Backlog APIクライアント
 
@@ -477,35 +477,27 @@ class BacklogClient:
         start_date: Optional[str] = None,
         due_date: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        """
-        課題を作成
+        """課題を作成します。
+
+        Args:
+            project_key: プロジェクトキー。
+            summary: 課題の件名。
+            issue_type_name: 課題の種別名。
+            priority_name: 優先度名。
+            description: 課題の詳細 (任意)。
+            assignee_name: 担当者名 (任意)。
+            category_name: カテゴリー名のリスト (任意)。
+            milestone_name: マイルストーン名のリスト (任意)。
+            version_name: 発生バージョン名のリスト (任意)。
+            start_date: 開始日 (任意、yyyy-MM-dd形式)。
+            due_date: 期限日 (任意、yyyy-MM-dd形式)。
+
+        Returns:
+            作成された課題情報。作成に失敗した場合はNone。
         """
         if self.read_only_mode:
             raise PermissionError("Cannot create issue in read-only mode.")
             # (既存のコードは変更なし)
-
-        project_id: プロジェクトID
-        project_key: プロジェクトキー（project_idが指定されていない場合に使用）
-        summary: 課題の件名
-        issue_type_id: 課題の種別ID
-        issue_type_name: 課題の種別名（issue_type_idが指定されていない場合に使用）
-        priority_id: 優先度ID
-        priority_name: 優先度名（priority_idが指定されていない場合に使用）
-        description: 課題の詳細
-            assignee_id: 担当者ID
-            assignee_name: 担当者名（assignee_idが指定されていない場合に使用）
-            category_id: カテゴリーIDのリスト
-            category_name: カテゴリー名のリスト（category_idが指定されていない場合に使用）
-            milestone_id: マイルストーンIDのリスト
-            milestone_name: マイルストーン名のリスト（milestone_idが指定されていない場合に使用）
-            version_id: 発生バージョンIDのリスト
-            version_name: 発生バージョン名のリスト（version_idが指定されていない場合に使用）
-            start_date: 開始日（yyyy-MM-dd形式）
-            due_date: 期限日（yyyy-MM-dd形式）
-
-        Returns:
-            作成された課題情報。作成に失敗した場合はNone
-        """
         try:
             # プロジェクトIDの解決
             if project_id is None and project_key is not None:
@@ -616,8 +608,7 @@ class BacklogClient:
         start_date: Optional[str] = None,
         due_date: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        """
-        課題を更新
+        """課題を更新。
 
         Args:
             issue_id_or_key: 課題IDまたは課題キー

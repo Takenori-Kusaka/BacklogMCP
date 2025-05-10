@@ -65,8 +65,15 @@ class TestProjectService:
         # エラーメッセージを確認
         assert "Failed to get project" in str(excinfo.value)
 
-    def test_get_projects_returns_list(self, project_service: ProjectService) -> None:
+    def test_get_projects_returns_list(self, mock_backlog_client: Mock) -> None:
         """プロジェクト一覧を取得するメソッドがリストを返すことを確認するテスト"""
+        # モックの戻り値を設定 (conftest.py の mock_backlog_client fixture と同じ値を設定)
+        mock_backlog_client.get_projects.return_value = [
+            {"id": 1, "projectKey": "TEST1", "name": "テストプロジェクト1"},
+            {"id": 2, "projectKey": "TEST2", "name": "テストプロジェクト2"},
+        ]
+        # テスト対象のサービスをインスタンス化
+        project_service = ProjectService(backlog_client=mock_backlog_client)
         # プロジェクト一覧を取得
         projects = project_service.get_projects()
 

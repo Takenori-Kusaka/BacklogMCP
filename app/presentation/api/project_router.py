@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
 
 from app.application.services.project_service import ProjectService
 from app.infrastructure.backlog.backlog_client import BacklogClient # 正しくは backlog_client_wrapper を使うべき
@@ -39,7 +40,7 @@ def get_project_service() -> ProjectService:
             detail="Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables.",
         )
 
-    backlog_client = BacklogClient(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
+    backlog_client = BacklogClientWrapper(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
     return ProjectService(backlog_client=backlog_client)
 
 

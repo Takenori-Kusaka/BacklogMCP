@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from tests.mocks import MockIssueService
+from app.application.services.issue_service import IssueService
 
 
 class TestIssueService:
@@ -21,7 +21,7 @@ class TestIssueService:
         ]
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題一覧を取得
         issues = issue_service.get_issues()
@@ -41,7 +41,7 @@ class TestIssueService:
         ]
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # パラメータ付きで課題一覧を取得
         issues = issue_service.get_issues(project_id=1, keyword="テスト", count=10)
@@ -71,14 +71,14 @@ class TestIssueService:
         ]
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # ステータスIDでフィルタリングして課題一覧を取得
-        issues = issue_service.get_issues(status_id=2)
+        issues = issue_service.get_issues(status_id=[2])
 
         # モックが正しいパラメータで呼ばれたことを確認
         mock_backlog_client.get_issues.assert_called_once_with(
-            project_id=None, status_id=2, assignee_id=None, keyword=None, count=20
+            project_id=None, status_id=[2], assignee_id=None, keyword=None, count=20
         )
 
         # 結果の検証
@@ -100,7 +100,7 @@ class TestIssueService:
         ]
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 担当者IDでフィルタリングして課題一覧を取得
         issues = issue_service.get_issues(assignee_id=123)
@@ -122,7 +122,7 @@ class TestIssueService:
         mock_backlog_client.get_issues.return_value = []
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題一覧を取得
         issues = issue_service.get_issues()
@@ -137,7 +137,7 @@ class TestIssueService:
         mock_backlog_client.get_issues.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:
@@ -156,7 +156,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題情報を取得
         issue = issue_service.get_issue("TEST-1")
@@ -173,7 +173,7 @@ class TestIssueService:
         mock_backlog_client.get_issue.return_value = None
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題情報を取得
         issue = issue_service.get_issue("NOT-EXIST")
@@ -187,7 +187,7 @@ class TestIssueService:
         mock_backlog_client.get_issue.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:
@@ -206,7 +206,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題を作成
         issue = issue_service.create_issue(
@@ -240,7 +240,7 @@ class TestIssueService:
         mock_backlog_client.get_user_id_by_name.return_value = 1
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 名前ベースのパラメータで課題を作成
         issue = issue_service.create_issue(
@@ -267,7 +267,7 @@ class TestIssueService:
         mock_backlog_client.create_issue.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:
@@ -288,7 +288,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題を更新
         issue = issue_service.update_issue(
@@ -321,7 +321,7 @@ class TestIssueService:
         mock_backlog_client.get_user_id_by_name.return_value = 1
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 名前ベースのパラメータで課題を更新
         issue = issue_service.update_issue(
@@ -353,7 +353,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # ステータスIDを指定して課題を更新
         issue = issue_service.update_issue(issue_id_or_key="TEST-1", status_id=3)
@@ -381,7 +381,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 担当者IDを指定して課題を更新
         issue = issue_service.update_issue(issue_id_or_key="TEST-1", assignee_id=456)
@@ -410,7 +410,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 開始日・期限日を指定して課題を更新
         issue = issue_service.update_issue(
@@ -436,7 +436,7 @@ class TestIssueService:
         mock_backlog_client.update_issue.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:
@@ -453,7 +453,7 @@ class TestIssueService:
         mock_backlog_client.delete_issue.return_value = True
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # 課題を削除
         result = issue_service.delete_issue("TEST-1")
@@ -470,7 +470,7 @@ class TestIssueService:
         mock_backlog_client.delete_issue.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:
@@ -488,7 +488,7 @@ class TestIssueService:
         }
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # コメントを追加
         comment = issue_service.add_comment(
@@ -511,7 +511,7 @@ class TestIssueService:
         mock_backlog_client.add_comment.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:
@@ -531,7 +531,7 @@ class TestIssueService:
         ]
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # コメント一覧を取得
         comments = issue_service.get_issue_comments("TEST-1")
@@ -553,7 +553,7 @@ class TestIssueService:
         mock_backlog_client.get_issue_comments.side_effect = Exception("API Error")
 
         # テスト対象のサービスをインスタンス化
-        issue_service = MockIssueService(backlog_client=mock_backlog_client)
+        issue_service = IssueService(backlog_client=mock_backlog_client)
 
         # エラーが発生することを確認
         with pytest.raises(Exception) as excinfo:

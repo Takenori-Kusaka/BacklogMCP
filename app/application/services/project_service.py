@@ -4,7 +4,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from app.infrastructure.backlog.backlog_client import BacklogClient
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
 
 
 class ProjectService:
@@ -14,7 +14,7 @@ class ProjectService:
     プロジェクト関連の業務ロジックを実装するサービスクラス
     """
 
-    def __init__(self, backlog_client: BacklogClient):
+    def __init__(self, backlog_client: BacklogClientWrapper):
         """
         初期化
 

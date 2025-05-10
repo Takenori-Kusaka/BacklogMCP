@@ -4,7 +4,7 @@ from httpx import AsyncClient
 
 from app.main import app
 from app.core.config import settings
-from app.infrastructure.backlog.backlog_client_wrapper import BacklogClient as BacklogClientWrapper # Wrapperをインポート
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper # Wrapperをインポート
 
 client = TestClient(app)
 

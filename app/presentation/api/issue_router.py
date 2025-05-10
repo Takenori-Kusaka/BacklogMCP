@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Query
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
 from pydantic import BaseModel
 
 from app.application.services.issue_service import IssueService
@@ -85,7 +86,7 @@ def get_issue_service() -> IssueService:
             detail="Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables.",
         )
 
-    backlog_client = BacklogClient(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
+    backlog_client = BacklogClientWrapper(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
     return IssueService(backlog_client=backlog_client)
 
 

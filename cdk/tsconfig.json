@@ -22,7 +22,13 @@
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@lib/*": ["lib/*"],
+      "@src/*": ["src/*"],
+      "@test/*": ["test/*"]
+    }
   },
   "exclude": [
     "node_modules",
@@ -30,6 +36,8 @@
     "dist"
   ],
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test/**/*",
+    "bin/**/*"
   ]
 }
