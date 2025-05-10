@@ -42,6 +42,9 @@ jobs:
         working-directory: cdk
         run: npm ci
 
+      - name: Install AWS CDK CLI
+        run: npm install -g aws-cdk
+
       - name: CDK Bootstrap (ignore if already bootstrapped)
         working-directory: cdk
         run: cdk bootstrap --require-approval never || true

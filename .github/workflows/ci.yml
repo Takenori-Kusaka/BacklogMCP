@@ -184,6 +184,9 @@ jobs:
         working-directory: cdk
         run: npm ci
 
+      - name: Install AWS CDK CLI
+        run: npm install -g aws-cdk
+
       - name: Run CDK unit tests
         working-directory: cdk
         run: bash scripts/run-tests.sh
