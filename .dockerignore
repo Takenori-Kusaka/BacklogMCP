@@ -1,0 +1,5 @@
+# Ignore CDK output directory to prevent recursive copying
+cdk/cdk.out/
+cdk/node_modules/
+node_modules/
+.git/
