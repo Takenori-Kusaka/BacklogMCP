@@ -8,16 +8,21 @@ const app = new cdk.App();
 const environment = app.node.tryGetContext('environment') || process.env.ENVIRONMENT || 'dev';
 const alertEmail = app.node.tryGetContext('alertEmail') || process.env.ALERT_EMAIL;
 
+// 共通のスタックパラメータ
+const commonProps = {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'ap-northeast-1',
+  },
+  environment,
+  alertEmail
+};
+
 // スタック名に環境名を含める
 const stackName = `BacklogMcpStack-${environment}`;
 
 // スタックの作成
-new BacklogMcpStack(app, stackName, {
-  environment: environment,
-  alertEmail: alertEmail,
-  /* For environment-agnostic stacks, we don't specify 'env' so that the stack can be deployed anywhere.
-   * For local debugging and testing, we don't need to specify AWS account and region. */
-});
+new BacklogMcpStack(app, stackName, commonProps);
 
 // タグの追加
 cdk.Tags.of(app).add('Environment', environment);
