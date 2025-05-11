@@ -87,9 +87,26 @@ export class BacklogMcpStack extends cdk.Stack {
     // Lambda Function with Web Adapter
     const lambdaFunction = new lambda.DockerImageFunction(this, 'BacklogMcpFunction', {
       functionName: `backlog-mcp-${environment}-function`,
-      code: lambda.DockerImageCode.fromImageAsset('../app', {
-        file: '../docker/Dockerfile',
-        ignoreMode: cdk.IgnoreMode.DOCKER,
+      code: lambda.DockerImageCode.fromImageAsset('../', { // cdkディレクトリから見てプロジェクトルートをコンテキストに
+        file: 'docker/Dockerfile', // プロジェクトルートからのDockerfileのパス
+        exclude: [ // appとdocker以外の主要なディレクトリを除外 (必要に応じて調整)
+          '.git',
+          '.github',
+          '.venv',
+          'cdk/cdk.out',
+          'cdk/node_modules',
+          'node_modules',
+          '__pycache__',
+          '*.pyc',
+          'tests',
+          'example',
+          'reference',
+          'scripts',
+          'logs',
+          'docs', // docsはopenapi.yamlを含むため、ビルドに必要なら除外しない
+          // その他不要なファイルやディレクトリ
+        ],
+        ignoreMode: cdk.IgnoreMode.DOCKER, // .dockerignore も参照される
       }),
       memorySize: config.lambda.memorySize,
       timeout: Duration.seconds(config.lambda.timeout),

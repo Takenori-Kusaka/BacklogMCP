@@ -1,4 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
+import * as fs from 'fs';          // use built-in fs for local bundling
+import { DockerImage } from 'aws-cdk-lib'; // DockerImage をインポート
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
@@ -12,6 +14,8 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Duration } from 'aws-cdk-lib';
+import * as path from 'path'; // pathモジュールをインポート
+import * as python from '@aws-cdk/aws-lambda-python-alpha';
 
 export interface BacklogMcpStackProps extends cdk.StackProps {
   environment: string;
@@ -84,23 +88,46 @@ export class BacklogMcpStack extends cdk.Stack {
 
     lambdaPolicy.attachToRole(lambdaRole);
 
-    // Lambda Function with Web Adapter
-    const lambdaFunction = new lambda.DockerImageFunction(this, 'BacklogMcpFunction', {
+    // PyPIパッケージ用レイヤー
+    const pypiLayer = new python.PythonLayerVersion(this, 'PypiLayer', {
+      entry: path.join(__dirname, '../../../build/lambda_layer'),
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_10],
+      description: 'Backlog MCP PyPI Packages Layer',
+    });
+
+    // ローカルWHL用レイヤー（pybacklogpy）
+    const whlLayer = new lambda.LayerVersion(this, 'WhlLayer', {
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../../dependencies')),
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_10],
+      description: 'Local WHL packages layer for pybacklogpy',
+    });
+
+    // Lambda Function
+    const lambdaFunction = new lambda.Function(this, 'BacklogMcpFunction', {
       functionName: `backlog-mcp-${environment}-function`,
-      code: lambda.DockerImageCode.fromImageAsset('../../app', {
-        file: '../../docker/Dockerfile',
-        ignoreMode: cdk.IgnoreMode.DOCKER,
-      }),
+      runtime: lambda.Runtime.PYTHON_3_10,
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../../app')),
+      handler: 'main.handler',
       memorySize: config.lambda.memorySize,
       timeout: Duration.seconds(config.lambda.timeout),
       environment: {
         TZ: 'Asia/Tokyo',
-        NODE_ENV: environment,
+        PYTHONPATH: [
+          '/var/runtime',
+          '/opt/python',  // PyPIレイヤーパス
+          '/opt'          // WHLレイヤーパス
+        ].join(':'),
         LOG_LEVEL: environment === 'prod' ? 'info' : 'debug',
+        READ_ONLY_MODE: process.env.READ_ONLY_MODE || 'False',
+        BACKLOG_API_KEY: process.env.BACKLOG_API_KEY || 'YOUR_BACKLOG_API_KEY_PLACEHOLDER',
+        BACKLOG_SPACE: process.env.BACKLOG_SPACE || 'YOUR_BACKLOG_SPACE_PLACEHOLDER',
+        BACKLOG_PROJECT: process.env.BACKLOG_PROJECT || 'YOUR_BACKLOG_PROJECT_PLACEHOLDER',
+        BACKLOG_DISABLE_SSL_VERIFY: process.env.BACKLOG_DISABLE_SSL_VERIFY || 'false',
       },
       role: lambdaRole,
       tracing: lambda.Tracing.ACTIVE,
       logGroup,
+      layers: [pypiLayer, whlLayer],
     });
 
     // Provisioned Concurrency for Production

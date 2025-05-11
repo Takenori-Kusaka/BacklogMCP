@@ -46,6 +46,10 @@ jobs:
         working-directory: cdk
         run: npm run build
 
+      - name: Clear CDK cache directory
+        working-directory: cdk
+        run: rm -rf cdk.out
+
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
 

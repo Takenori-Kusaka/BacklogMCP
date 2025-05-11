@@ -21,7 +21,7 @@ uv = "^0.6.17"
 requests = ">=2.22.0,<3.0.0"
 six = "^1.17.0"
 mcp = "^1.6.0"
-pybacklogpy = "^0.12"
+pybacklogpy = "0.12.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

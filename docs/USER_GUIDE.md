@@ -52,19 +52,48 @@ docker-compose -f docker/docker-compose.yml up -d
 
 ### Poetry による環境のセットアップ
 
-```bash
-# Poetryのインストール（未インストールの場合）
-pip install poetry
+Poetryを使用してプロジェクトの依存関係を管理します。
 
-# 依存関係のインストール
-poetry install
+1.  **Poetryのインストール (未インストールの場合):**
+    Poetryの公式ドキュメントでは `pipx` を使ったインストールが推奨されています。
 
-# 仮想環境の有効化
-poetry shell
+    ```bash
+    # pipxをインストール (もし未インストールの場合)
+    python3 -m pip install --user pipx
+    python3 -m pipx ensurepath
 
-# 開発サーバーの起動
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+    # pipxを使ってPoetryをインストール
+    pipx install poetry
+    ```
+    *WSL環境など、環境によっては `pipx` が正しく動作するために追加のセットアップが必要な場合があります (例: `python3-venv` パッケージのインストール)。詳細はPoetryおよびpipxの公式ドキュメントを参照してください。*
+
+2.  **Poetry Exportプラグインのインストール:**
+    `requirements.txt` 形式でのエクスポート機能を利用するために、`poetry-plugin-export` をインストールします。
+
+    ```bash
+    poetry self add poetry-plugin-export
+    ```
+
+3.  **依存関係のインストール:**
+    プロジェクトルートで以下のコマンドを実行し、依存関係をインストールします。
+
+    ```bash
+    poetry install
+    ```
+
+4.  **仮想環境の有効化:**
+    Poetryが管理する仮想環境を有効化します。
+
+    ```bash
+    poetry shell
+    ```
+
+5.  **開発サーバーの起動:**
+    仮想環境内で開発サーバーを起動します。
+
+    ```bash
+    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ```
 
 ## 使用例
 

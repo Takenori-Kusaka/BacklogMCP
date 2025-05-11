@@ -52,6 +52,7 @@ BacklogMCPは以下のBacklog機能へのアクセスを提供します：
 - [ユーザーガイド](docs/USER_GUIDE.md) - セットアップ方法、使用例、APIの使い方など
 - [開発者ガイド](docs/DEVELOPER_GUIDE.md) - アーキテクチャ、開発方針、プロジェクト構造など
 - [デプロイガイド](docs/DEPLOYMENT.md) - AWS CDKを使用したデプロイ方法
+- [CDKデプロイガイド](docs/CDK_DEPLOYMENT_GUIDE.md) - CDKのドライランとデプロイの詳細な手順
 - [貢献ガイド](docs/CONTRIBUTING.md) - プロジェクトへの貢献方法
 - [Backlogユースケース](BacklogUsecases.md) - Backlogの包括的なユースケース分析
 
