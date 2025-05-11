@@ -12,6 +12,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Duration } from 'aws-cdk-lib';
+import * as path from 'path';
 
 export interface BacklogMcpStackProps extends cdk.StackProps {
   environment: string;
@@ -197,35 +198,6 @@ export class BacklogMcpStack extends cdk.Stack {
       apiKeyRequired: true,
     });
 
-    // API Key
-    const apiKey = new apigateway.ApiKey(this, 'BacklogMcpApiKey', {
-      apiKeyName: `backlog-mcp-${environment}-key`,
-      description: `API Key for Backlog MCP (${environment})`,
-      enabled: true,
-    });
-
-    // Usage Plan
-    const usagePlan = new apigateway.UsagePlan(this, 'BacklogMcpUsagePlan', {
-      name: `${environment}-standard`,
-      description: `Standard usage plan for Backlog MCP API (${environment})`,
-      apiStages: [
-        {
-          api,
-          stage: api.deploymentStage,
-        },
-      ],
-      throttle: {
-        rateLimit: config.apiGateway.rateLimit,
-        burstLimit: config.apiGateway.burstLimit,
-      },
-      quota: {
-        limit: config.apiGateway.quotaLimit,
-        period: apigateway.Period.MONTH,
-      },
-    });
-
-    usagePlan.addApiKey(apiKey);
-
     // Response Headers Policy
     const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeaders', {
       responseHeadersPolicyName: `backlog-mcp-${environment}-security-headers`,
@@ -364,6 +336,63 @@ export class BacklogMcpStack extends cdk.Stack {
       api5xxErrorAlarm.addAlarmAction(new actions.SnsAction(alarmTopic));
     }
 
+    // IAM Role for ManageApiKeys Lambda
+    const manageApiKeysLambdaRole = new iam.Role(this, 'ManageApiKeysLambdaExecutionRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: `Execution role for Manage API Keys Lambda (${environment})`,
+    });
+
+    // IAM Policy for ManageApiKeys Lambda
+    const manageApiKeysLambdaPolicy = new iam.Policy(this, 'ManageApiKeysLambdaExecutionPolicy', {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'logs:CreateLogGroup',
+            'logs:CreateLogStream',
+            'logs:PutLogEvents',
+          ],
+          resources: [`arn:aws:logs:${this.region}:${this.account}:log-group:/aws/lambda/manage-api-keys-${environment}-function:*`],
+        }),
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'apigateway:POST', // For createApiKey, createUsagePlan, createUsagePlanKey
+            'apigateway:PUT',  // For updating resources if needed in future
+            'apigateway:GET',  // For querying existing resources if needed
+            // Add more specific permissions as actions are expanded (e.g., delete)
+          ],
+          // Resource scope needs to be carefully considered.
+          // For creating, it might be broad, but for GET/PUT/DELETE, it should be specific.
+          resources: [
+            `arn:aws:apigateway:${this.region}::/apikeys`,
+            `arn:aws:apigateway:${this.region}::/apikeys/*`,
+            `arn:aws:apigateway:${this.region}::/usageplans`,
+            `arn:aws:apigateway:${this.region}::/usageplans/*`,
+            `arn:aws:apigateway:${this.region}::/usageplans/*/keys`,
+            // The following is needed if the Lambda needs to know about the API Gateway stages
+            `arn:aws:apigateway:${this.region}::/restapis/${api.restApiId}/stages/${api.deploymentStage.stageName}`
+          ],
+        }),
+      ],
+    });
+    manageApiKeysLambdaPolicy.attachToRole(manageApiKeysLambdaRole);
+
+    // Lambda function to manage API Keys and Usage Plans
+    const manageApiKeysFunction = new lambda.Function(this, 'ManageApiKeysFunction', {
+      functionName: `manage-api-keys-${environment}-function`,
+      runtime: lambda.Runtime.PYTHON_3_10, // Or your project's Python version
+      handler: 'manage_api_keys_function.lambda_handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../src/lambda')),
+      role: manageApiKeysLambdaRole,
+      environment: {
+        AWS_REGION: this.region,
+        API_GATEWAY_STAGE_ARN: `arn:aws:apigateway:${this.region}::/restapis/${api.restApiId}/stages/${api.deploymentStage.stageName}`,
+      },
+      timeout: Duration.seconds(60), // Increased timeout for multiple API calls
+      logRetention: logs.RetentionDays.ONE_WEEK,
+    });
+
     // Stack Outputs
     new cdk.CfnOutput(this, 'Environment', {
       value: environment,
@@ -381,10 +410,10 @@ export class BacklogMcpStack extends cdk.Stack {
       exportName: `backlog-mcp-${environment}-cloudfront-domain`,
     });
 
-    new cdk.CfnOutput(this, 'ApiKeyId', {
-      description: 'API Key ID',
-      value: apiKey.keyId,
-      exportName: `backlog-mcp-${environment}-api-key-id`,
+    new cdk.CfnOutput(this, 'ManageApiKeysFunctionName', {
+      description: 'Name of the Lambda function to manage API Keys and Usage Plans',
+      value: manageApiKeysFunction.functionName,
+      exportName: `backlog-mcp-${environment}-manage-api-keys-function-name`,
     });
   }
 }

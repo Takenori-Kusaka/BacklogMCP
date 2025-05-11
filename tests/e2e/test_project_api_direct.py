@@ -14,19 +14,24 @@ logger = setup_logger("test_project_api_direct", "test_project_api_direct.log")
 
 
 @pytest.mark.skipif(
-    not os.getenv("BACKLOG_API_KEY") or not os.getenv("BACKLOG_SPACE"),
-    reason="Backlog API環境変数が設定されていません",
+    not os.getenv("DEPLOYED_API_ENDPOINT") or not os.getenv("DEPLOYED_API_KEY"),
+    reason="デプロイ済みAPIの環境変数 (DEPLOYED_API_ENDPOINT, DEPLOYED_API_KEY) が設定されていません",
 )
 def test_get_projects_direct() -> None:
     """APIエンドポイントを直接呼び出してプロジェクト一覧を取得するテスト"""
     logger.info(f"テスト開始: test_get_projects_direct")
 
+    api_endpoint = os.getenv("DEPLOYED_API_ENDPOINT")
+    api_key = os.getenv("DEPLOYED_API_KEY")
+
     # APIエンドポイントを直接呼び出す
-    api_url = "http://127.0.0.1:8000/api/projects/"
+    api_url = f"{api_endpoint}/api/v1/projects/" # v1を追加
     logger.info(f"API URL: {api_url}")
+    headers = {"x-api-key": api_key}
+    logger.info(f"Headers: {{'x-api-key': '********'}}") # APIキーはログに出力しない
 
     try:
-        response = requests.get(api_url)
+        response = requests.get(api_url, headers=headers)
         logger.info(f"ステータスコード: {response.status_code}")
         logger.info(f"レスポンス: {response.text}")
 
@@ -45,23 +50,28 @@ def test_get_projects_direct() -> None:
 
 
 @pytest.mark.skipif(
-    not os.getenv("BACKLOG_API_KEY")
-    or not os.getenv("BACKLOG_SPACE")
-    or not os.getenv("BACKLOG_PROJECT"),
-    reason="Backlog API環境変数が設定されていません",
+    not os.getenv("DEPLOYED_API_ENDPOINT")
+    or not os.getenv("DEPLOYED_API_KEY")
+    or not os.getenv("BACKLOG_PROJECT"), # BACKLOG_PROJECTは引き続き利用
+    reason="デプロイ済みAPIの環境変数 (DEPLOYED_API_ENDPOINT, DEPLOYED_API_KEY) または BACKLOG_PROJECT が設定されていません",
 )
 def test_get_project_by_key_direct() -> None:
     """APIエンドポイントを直接呼び出して特定プロジェクトを取得するテスト"""
     logger.info(f"テスト開始: test_get_project_by_key_direct")
+
+    api_endpoint = os.getenv("DEPLOYED_API_ENDPOINT")
+    api_key = os.getenv("DEPLOYED_API_KEY")
     project_key = os.getenv("BACKLOG_PROJECT")
     logger.info(f"プロジェクトキー: {project_key}")
 
     # APIエンドポイントを直接呼び出す
-    api_url = f"http://127.0.0.1:8000/api/projects/{project_key}"
+    api_url = f"{api_endpoint}/api/v1/projects/{project_key}" # v1を追加
     logger.info(f"API URL: {api_url}")
+    headers = {"x-api-key": api_key}
+    logger.info(f"Headers: {{'x-api-key': '********'}}") # APIキーはログに出力しない
 
     try:
-        response = requests.get(api_url)
+        response = requests.get(api_url, headers=headers)
         logger.info(f"ステータスコード: {response.status_code}")
         logger.info(f"レスポンス: {response.text}")
 
