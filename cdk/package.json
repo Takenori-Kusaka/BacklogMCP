@@ -2,7 +2,7 @@
   "name": "backlog-mcp-cdk",
   "version": "0.1.0",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/src && cp -r src/lambda dist/src/",
     "watch": "tsc -w",
     "test": "jest --coverage",
     "cdk": "cdk",

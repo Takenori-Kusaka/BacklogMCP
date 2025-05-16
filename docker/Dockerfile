@@ -16,10 +16,13 @@ RUN pip install --no-cache-dir poetry && \
     pip install pybacklogpy==0.12
 
 # アプリケーションのコピー
-# COPY . . # この行は上記でappディレクトリなどを個別にコピーするように変更したためコメントアウトまたは削除
+COPY app/ ./app/
+
+# 環境変数の設定
+ENV PYTHONPATH=/app
 
 # ポートの公開
 EXPOSE 8000
 
-# アプリケーションの実行
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Mangumを使用したLambdaハンドラー
+CMD ["python", "-c", "from app.main import handler; import sys; handler(sys.stdin.read(), None)"]

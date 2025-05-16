@@ -115,11 +115,15 @@ export class BacklogMcpStack extends cdk.Stack {
         TZ: 'Asia/Tokyo',
         NODE_ENV: environment,
         LOG_LEVEL: environment === 'prod' ? 'info' : 'debug',
+        PYTHONPATH: '/app',
       },
       role: lambdaRole,
       tracing: lambda.Tracing.ACTIVE,
       logGroup,
     });
+
+    // DockerImageFunctionを使用する場合、レイヤーを追加することはできません
+    // Lambda Web Adapterは、Dockerfileの中で直接含める必要があります
 
     // Provisioned Concurrency for Production
     if (config.lambda.provisionedConcurrentExecutions) {
@@ -383,10 +387,10 @@ export class BacklogMcpStack extends cdk.Stack {
       functionName: `manage-api-keys-${environment}-function`,
       runtime: lambda.Runtime.PYTHON_3_10, // Or your project's Python version
       handler: 'manage_api_keys_function.lambda_handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../src/lambda')),
+      code: lambda.Code.fromAsset('src/lambda'), // Corrected path relative to cdk directory
       role: manageApiKeysLambdaRole,
       environment: {
-        AWS_REGION: this.region,
+        // AWS_REGION is automatically available to the Lambda runtime, so no need to set it explicitly.
         API_GATEWAY_STAGE_ARN: `arn:aws:apigateway:${this.region}::/restapis/${api.restApiId}/stages/${api.deploymentStage.stageName}`,
       },
       timeout: Duration.seconds(60), // Increased timeout for multiple API calls
