@@ -121,124 +121,43 @@ def is_port_in_use(port: int) -> bool:
 def mcp_server_process() -> Generator[str, None, None]:
     """
     テスト用のMCPサーバープロセスを起動するフィクスチャ
+    
+    Dockerコンテナ上で動作しているサーバーを使用します。
+    環境変数 DOCKER_MCP_SERVER_URL でサーバーのURLを指定できます（デフォルト: http://localhost:8000）
 
     Returns:
         Generator[str, None, None]: MCPサーバーのURL
     """
-    # サーバーのポート
-    port = 8000
-
-    logger.info(f"サーバー起動準備: ポート {port} を使用")
-
-    # ポートが既に使用されている場合は別のポートを使用
-    while is_port_in_use(port):
-        port += 1
-        logger.info(f"ポート {port} を使用")
-
-    # サーバーを起動
-    logger.info(
-        f"サーバー起動コマンド: python -m uvicorn app.main:app --host 127.0.0.1 --port {port}"
-    )
-
-    # Windows環境での起動方法を改善
-    if os.name == "nt":
-        # Windowsの場合は、shellをTrueにして、コマンドを文字列として渡す
-        # pythonコマンドを使用して、uvicornを起動する
-        server_process = subprocess.Popen(
-            f"python -m uvicorn app.main:app --host 127.0.0.1 --port {port}",
-            shell=True,
-            # 標準出力と標準エラー出力を表示するためにPIPEを使用しない
-            stdout=None,
-            stderr=None,
-        )
-    else:
-        # Unix系の場合
-        server_process = subprocess.Popen(
-            [
-                "python",
-                "-m",
-                "uvicorn",
-                "app.main:app",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                str(port),
-            ],
-            stdout=None,
-            stderr=None,
-            preexec_fn=os.setsid,
-        )
-
-    logger.info(f"サーバープロセスID: {server_process.pid}")
-
-    # サーバーの起動を待つ
-    logger.info(f"サーバー起動待機開始: {time.time()}")
-
-    # サーバーが実際に起動して応答するまで待機
-    max_retries = 30
+    # Dockerで起動したサーバーのURLを使用
+    server_url = os.getenv("DOCKER_MCP_SERVER_URL", "http://localhost:8000")
+    logger.info(f"Docker環境のサーバーを使用します。URL: {server_url}")
+    
+    # サーバーが応答するか確認
+    max_retries = 5
     retry_count = 0
-    server_url = f"http://127.0.0.1:{port}"
+    
     while retry_count < max_retries:
         try:
             import requests
-
+            
             response = requests.get(f"{server_url}/")
             if response.status_code == 200:
-                logger.info(
-                    f"サーバー起動確認: {response.status_code} {response.text[:100]}"
-                )
+                logger.info(f"Docker上のサーバーに接続成功: {response.status_code}")
                 break
         except Exception as e:
-            logger.info(f"サーバー接続試行中... {str(e)}")
-
+            logger.info(f"Docker上のサーバーへの接続試行中... {str(e)}")
+        
         time.sleep(1)
         retry_count += 1
-        logger.info(f"サーバー起動待機中... {retry_count}/{max_retries}")
-
+    
     if retry_count >= max_retries:
-        logger.error(f"サーバー起動タイムアウト")
-        raise Exception("サーバーの起動に失敗しました")
-
-    logger.info(f"サーバー起動待機終了: {time.time()}")
-
-    # サーバーのURLを返す
-    logger.info(f"サーバーURL: {server_url}")
-
+        logger.error("Docker上のサーバーへの接続に失敗しました")
+        raise Exception("Docker上のサーバーへの接続に失敗しました。Docker Composeでサーバーが起動しているか確認してください。")
+    
     yield server_url
-
-    # テスト終了後にサーバーを停止
-    logger.info(f"サーバー停止開始: {time.time()}")
-    try:
-        if os.name == "nt":
-            # Windowsの場合
-            logger.info(f"Windows環境でサーバー停止: PID {server_process.pid}")
-            # Windowsでは、プロセスツリーを終了するためにtaskkillを使用
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(server_process.pid)])
-        else:
-            # Unix系の場合
-            logger.info(f"Unix環境でサーバー停止: PID {server_process.pid}")
-            os.killpg(os.getpgid(server_process.pid), signal.SIGTERM)
-
-        server_process.wait(timeout=5)  # 最大5秒待機
-        logger.info(f"サーバー停止完了: {time.time()}")
-    except Exception as e:
-        logger.error(f"サーバー停止中にエラーが発生: {str(e)}")
-
-
-# # 簡易的なmcp_server_processフィクスチャ
-# @pytest.fixture(scope="session")
-# def mcp_server_process() -> Generator[str, None, None]:
-#     """
-#     テスト用のMCPサーバープロセスを起動するフィクスチャ（簡易版）
-#
-#     Returns:
-#         Generator[str, None, None]: MCPサーバーのURL
-#     """
-#     # 手動で起動したサーバーのURLを返す
-#     server_url = "http://127.0.0.1:8000"
-#     logger.info(f"サーバーURL: {server_url}")
-#
-#     yield server_url
+    
+    # スクリプト側でコンテナを停止するため、ここでは何もしない
+    logger.info("Docker環境のサーバーを使用しているため、ここでは停止処理を行いません")
 
 
 @pytest.fixture(scope="session")

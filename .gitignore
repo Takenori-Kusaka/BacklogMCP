@@ -54,3 +54,7 @@ cdk/coverage/
 /bin/act
 *.snap
 .coverage.*
+
+node_modules/
+.pytest_cache/
+.hypothesis/

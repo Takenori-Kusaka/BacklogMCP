@@ -37,7 +37,7 @@
 **目的**: システム全体が実際の環境に近い状態で正しく動作することを確認する。
 
 **実施方法**:
-- 実際にFastAPIサーバーをホスト
+- Docker Composeを使用してFastAPIサーバーをコンテナ上でホスト
 - HTTPリクエストを送信してAPIエンドポイントをテスト
 - MCPプロトコルを使用してBacklogを操作
 - 実際のユーザーシナリオに基づいたテストケースを作成
@@ -45,7 +45,50 @@
 
 **ディレクトリ**: `tests/e2e/`
 
-**実行コマンド**: `pytest tests/e2e/`
+**実行コマンド**: `bash scripts/run_docker_e2e_tests.sh`
+
+## 3.1. 同期E2Eテスト (Synchronous E2E Test)
+
+**目的**: 同期的なAPIエンドポイントが正しく動作することを確認する。
+
+**実施方法**:
+- Docker Composeを使用してFastAPIサーバーをコンテナ上でホスト
+- 同期的なHTTPリクエストを送信してAPIエンドポイントをテスト
+- 実際のユーザーシナリオに基づいたテストケースを作成
+- テスト結果をコンソールに出力
+
+**ディレクトリ**: `tests/e2e/`
+
+**実行コマンド**: `bash scripts/run_sync_e2e_test.sh`
+
+**詳細ドキュメント**: `docs/SYNC_E2E_TESTING.md`
+
+## 3.2. MCP Inspector E2Eテスト (MCP Inspector E2E Test)
+
+**目的**: MCPサーバーがMCP Inspectorを使用して正しく動作することを確認する。
+
+**実施方法**:
+- Docker Composeを使用してFastAPIサーバーをコンテナ上でホスト
+- MCP Inspectorを使用してMCPサーバーをテスト
+- 利用可能なツールとリソースをテスト
+- テスト結果をJSON形式で保存し、HTMLレポートを生成
+
+**ディレクトリ**: `tests/e2e/`
+
+**実行コマンド**: 
+```bash
+# 単一テストの実行
+bash scripts/run_inspector_e2e_test.sh [テストメソッド]
+
+# テストスイートの実行
+bash scripts/run_inspector_test_suite.sh
+```
+
+**テストケース定義**: `tests/e2e/mcp_inspector_test_cases.json`
+
+**レポート生成**: `scripts/generate_inspector_report.py`
+
+**詳細ドキュメント**: `docs/MCP_INSPECTOR_TESTING.md`
 
 ## 4. デプロイテスト (Deployment Test)
 
@@ -53,16 +96,13 @@
 
 **実施方法**:
 - Dockerfileとdocker-compose.ymlを使用してFastAPIをコンテナ化
-- コンテナ化された環境でE2Eテストを実行
+- コンテナ化された環境でE2Eテストを実行（E2Eテストと統合）
 - 複数のサービスが連携する場合は、それらの連携もテスト
 - 環境変数や設定ファイルが正しく読み込まれることを確認
 
-**ディレクトリ**: `tests/deployment/`
-
 **実行コマンド**: 
 ```bash
-docker-compose up -d
-pytest tests/deployment/
+bash scripts/run_docker_e2e_tests.sh
 ```
 
 ## 5. CIテスト (Continuous Integration Test)
@@ -110,4 +150,4 @@ pytest tests/deployment/
 
 1. MCPサーバーのテストはスキップせず、通るように実装を修正すること
 2. MCPサーバーとの通信にはMCP Clientを使用すること（referenceディレクトリに参考SDKあり）
-3. E2Eテストでは実際にFastAPIサーバーを起動し、HTTPリクエストを送信してテストすること
+3. E2Eテストでは、Docker環境で起動したFastAPIサーバーに対してHTTPリクエストを送信してテストすること

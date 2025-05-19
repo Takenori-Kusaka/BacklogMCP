@@ -11,8 +11,9 @@ BacklogMCPは以下の特徴を持っています：
 - **FastAPIベース**: FastAPIを使用したMCPサーバーで、RESTful APIとしても利用可能
 - **柔軟なデプロイオプション**: AWS Lambda、ローカル環境、ECSなど様々な環境で動作可能
 - **コンテナ対応**: DockerfileとDocker Composeによる簡単なセットアップと開発
-- **包括的なテスト戦略**: ユニットテスト、結合テスト、E2Eテストなど6つのレベルのテスト
+- **包括的なテスト戦略**: ユニットテスト、結合テスト、E2Eテストなど複数レベルのテスト
 - **TDD開発方針**: テストファーストの開発アプローチによる高品質なコード
+- **MCP Inspector統合**: MCP Inspectorを使用した自動E2Eテストとレポート生成
 
 ## 機能
 
@@ -55,6 +56,8 @@ BacklogMCPは以下のBacklog機能へのアクセスを提供します：
 - [CDKデプロイガイド](docs/CDK_DEPLOYMENT_GUIDE.md) - CDKのドライランとデプロイの詳細な手順
 - [貢献ガイド](docs/CONTRIBUTING.md) - プロジェクトへの貢献方法
 - [Backlogユースケース](BacklogUsecases.md) - Backlogの包括的なユースケース分析
+- [同期E2Eテスト](docs/SYNC_E2E_TESTING.md) - 同期的なE2Eテスト実行ガイド
+- [MCP Inspectorテスト](docs/MCP_INSPECTOR_TESTING.md) - MCP Inspectorを使用したE2Eテスト実行ガイド
 
 ## ライセンス
 

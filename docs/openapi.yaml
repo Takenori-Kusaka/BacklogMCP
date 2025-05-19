@@ -1,11 +1,11 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: BacklogMCP
   description: "Backlog SaaS\u3092Model Context Protocol (MCP)\u7D4C\u7531\u3067\u64CD\
     \u4F5C\u3059\u308B\u305F\u3081\u306EAPI"
   version: 0.1.0
 paths:
-  /api/projects/:
+  /api/v1/projects/:
     get:
       tags:
       - projects
@@ -29,7 +29,7 @@ paths:
                 title: Response Get Projects
         '404':
           description: Not found
-  /api/projects/{project_key}:
+  /api/v1/projects/{project_key}:
     get:
       tags:
       - projects
@@ -65,7 +65,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/projects/{project_key}/statuses:
+  /api/v1/projects/{project_key}/statuses:
     get:
       tags:
       - projects
@@ -103,7 +103,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/projects/{project_key}/issue-types:
+  /api/v1/projects/{project_key}/issue-types:
     get:
       tags:
       - projects
@@ -141,7 +141,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/projects/{project_key}/categories:
+  /api/v1/projects/{project_key}/categories:
     get:
       tags:
       - projects
@@ -179,7 +179,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/projects/{project_key}/milestones:
+  /api/v1/projects/{project_key}/milestones:
     get:
       tags:
       - projects
@@ -217,7 +217,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/projects/{project_key}/versions:
+  /api/v1/projects/{project_key}/versions:
     get:
       tags:
       - projects

@@ -34,11 +34,20 @@ class ProjectService:
             Exception: API呼び出しに失敗した場合
         """
         try:
+            import os
+            print(f"[DEBUG] BACKLOG_API_KEY: {os.environ.get('BACKLOG_API_KEY', 'Not set')[:5]}...")
+            print(f"[DEBUG] BACKLOG_SPACE: {os.environ.get('BACKLOG_SPACE', 'Not set')}")
+            print(f"[DEBUG] BACKLOG_PROJECT: {os.environ.get('BACKLOG_PROJECT', 'Not set')}")
+            print(f"[DEBUG] Backlog client: {self.backlog_client}")
+            
             projects = self.backlog_client.get_projects()
+            print(f"[DEBUG] Projects: {projects}")
             return projects
         except Exception as e:
-            # エラーログの出力など
-            print(f"Error getting projects: {e}")
+            import traceback
+            error_traceback = traceback.format_exc()
+            print(f"[ERROR] Error getting projects: {e}")
+            print(f"[ERROR] Traceback: {error_traceback}")
             # 呼び出し元でハンドリングできるように例外を再スロー
             raise Exception(f"Failed to get projects: {e}") from e
 

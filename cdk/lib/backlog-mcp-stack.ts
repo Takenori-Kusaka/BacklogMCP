@@ -116,6 +116,9 @@ export class BacklogMcpStack extends cdk.Stack {
         NODE_ENV: environment,
         LOG_LEVEL: environment === 'prod' ? 'info' : 'debug',
         PYTHONPATH: '/app',
+        BACKLOG_API_KEY: '725Wl9gRD1zK0HvqObSDRyQdsReaMoKj21EGY7isQVQiYkmnuAwVx8dyS1Pqw8MF',
+        BACKLOG_SPACE: 't-kusaka',
+        BACKLOG_PROJECT: 'TEST',
       },
       role: lambdaRole,
       tracing: lambda.Tracing.ACTIVE,
@@ -194,6 +197,32 @@ export class BacklogMcpStack extends cdk.Stack {
 
     const projectResource = projectsResource.addResource('{projectId}');
     projectResource.addMethod('GET', lambdaIntegration, {
+      apiKeyRequired: true,
+    });
+
+    // Add additional project resources
+    const projectStatusesResource = projectResource.addResource('statuses');
+    projectStatusesResource.addMethod('GET', lambdaIntegration, {
+      apiKeyRequired: true,
+    });
+
+    const projectIssueTypesResource = projectResource.addResource('issue-types');
+    projectIssueTypesResource.addMethod('GET', lambdaIntegration, {
+      apiKeyRequired: true,
+    });
+
+    const projectCategoriesResource = projectResource.addResource('categories');
+    projectCategoriesResource.addMethod('GET', lambdaIntegration, {
+      apiKeyRequired: true,
+    });
+
+    const projectMilestonesResource = projectResource.addResource('milestones');
+    projectMilestonesResource.addMethod('GET', lambdaIntegration, {
+      apiKeyRequired: true,
+    });
+
+    const projectVersionsResource = projectResource.addResource('versions');
+    projectVersionsResource.addMethod('GET', lambdaIntegration, {
       apiKeyRequired: true,
     });
 

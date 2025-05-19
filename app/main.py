@@ -4,7 +4,15 @@ BacklogMCP - メインアプリケーション
 
 import os
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    # 環境変数の読み込み
+    load_dotenv()
+    print("[DEBUG] .env ファイルを読み込みました")
+except ImportError:
+    print("[DEBUG] python-dotenv がインストールされていないため、.env ファイルを読み込めません")
+    # Lambda環境では.envファイルは使用しないので、エラーを無視する
+
 from fastapi import FastAPI, Request, HTTPException, Response
 from typing import Callable
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,9 +22,6 @@ from fastapi_mcp import FastApiMCP  # type: ignore
 
 from app.core.config import settings
 from mangum import Mangum
-
-# 環境変数の読み込み
-load_dotenv()
 
 from app.presentation.api.bulk_operations_router import router as bulk_operations_router
 from app.presentation.api.issue_router import router as issue_router
@@ -31,7 +36,24 @@ app = FastAPI(
     title="BacklogMCP",
     description="Backlog SaaSをModel Context Protocol (MCP)経由で操作するためのAPI",
     version="0.1.0",
+    openapi_version="3.0.3",
 )
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi_schema():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    openapi_schema["openapi"] = "3.0.3"  # OpenAPIのバージョンを3.0.3に設定
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi_schema
 
 # CORSミドルウェアの設定
 app.add_middleware(
@@ -76,6 +98,20 @@ print("[DEBUG] MCPサーバー設定開始")
 
 # MCPサーバーの設定を更新
 mcp_server.setup_server()
+
+# 新しいツールを明示的に登録 (fastapi-mcpが自動検出しない場合や、確実性を高めるため)
+# hasattrで確認し、存在すれば呼び出す (より安全な方法)
+# if hasattr(mcp_server, "add_tool") and callable(mcp_server.add_tool):
+#     mcp_server.add_tool(ping_tool)
+#     print(f"[DEBUG] 明示的にツールを登録: {ping_tool.name}")
+# elif hasattr(mcp_server, "tools") and isinstance(mcp_server.tools, list) and ping_tool not in mcp_server.tools:
+#     # add_toolがない場合の代替案 (ただし、これが公式な方法かは不明)
+#     # mcp_server.tools.append(ping_tool)
+#     # print(f"[DEBUG] リストにツールを追加: {ping_tool.name}")
+#     # リストへの直接追加は副作用があるかもしれないので、まずは自動検出に期待する
+#     pass
+
+
 print("[DEBUG] MCPサーバー設定完了")
 
 # 登録されたツールの一覧を表示
@@ -109,8 +145,30 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     Returns:
         JSONResponse: エラーレスポンス
     """
+    import traceback
+    error_traceback = traceback.format_exc()
+    print(f"[ERROR] 例外が発生しました: {str(exc)}")
+    print(f"[ERROR] トレースバック: {error_traceback}")
+    print(f"[ERROR] リクエストパス: {request.url.path}")
+    print(f"[ERROR] リクエストメソッド: {request.method}")
+    print(f"[ERROR] リクエストヘッダー: {request.headers}")
+    
+    try:
+        body = await request.body()
+        print(f"[ERROR] リクエストボディ: {body.decode('utf-8')}")
+    except Exception as e:
+        print(f"[ERROR] リクエストボディの取得に失敗しました: {str(e)}")
+    
+    import datetime
     return JSONResponse(
-        status_code=500, content={"error": f"Internal Server Error: {str(exc)}"}
+        status_code=500, 
+        content={
+            "error": "Internal Server Error", 
+            "message": str(exc),
+            "path": request.url.path,
+            "method": request.method,
+            "timestamp": str(datetime.datetime.now())
+        }
     )
 
 

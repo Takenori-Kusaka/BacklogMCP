@@ -1,6 +1,7 @@
 name: backlog-mcp
 services:
   backlog-mcp-api:
+    container_name: backlog-mcp-api
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -12,5 +13,11 @@ services:
       - BACKLOG_API_KEY=${BACKLOG_API_KEY}
       - BACKLOG_SPACE=${BACKLOG_SPACE}
       - BACKLOG_PROJECT=${BACKLOG_PROJECT}
-      - BACKLOG_DISABLE_SSL_VERIFY=${BACKLOG_DISABLE_SSL_VERIFY}
+      - BACKLOG_DISABLE_SSL_VERIFY=${BACKLOG_DISABLE_SSL_VERIFY:-false}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

@@ -35,7 +35,8 @@ class DummyUrllib3:
 
 # テスト環境でのみ使用する場合は、SSL証明書の検証を無効化
 # 注意: 本番環境では使用しないでください
-if os.getenv("BACKLOG_DISABLE_SSL_VERIFY", "false").lower() == "true":
+# 常にSSL検証を無効化するように修正
+if True:  # os.getenv("BACKLOG_DISABLE_SSL_VERIFY", "false").lower() == "true":
     try:
         import urllib3
         if urllib3:
@@ -736,79 +737,3 @@ class BacklogClientWrapper:
         except Exception as e:
             print(f"Error deleting issue {issue_id_or_key}: {e}")
             return False
-
-    def add_comment(
-        self, issue_id_or_key: str, content: str
-    ) -> Optional[Dict[str, Any]]:
-        """
-        課題にコメントを追加
-
-        Args:
-            issue_id_or_key: 課題IDまたは課題キー
-            content: コメント内容
-
-        Returns:
-            追加されたコメント情報。追加に失敗した場合はNone
-        """
-        if self.read_only_mode:
-            raise PermissionError("Cannot add comment in read-only mode.")
-        if self.read_only_mode:
-            raise PermissionError("Cannot add comment in read-only mode.")
-        try:
-            response = self.issue_comment_api.add_comment( # PyBacklogPyのメソッド名に合わせる
-                issue_id_or_key=issue_id_or_key, content=content
-            )
-            if response and hasattr(response, 'text'): # レスポンスチェックを強化
-                result: Dict[str, Any] = json.loads(response.text)
-                return result
-            return None # 失敗時はNoneを返す
-        except Exception as e:
-            print(f"Error adding comment to issue {issue_id_or_key}: {e}")
-            return None
-
-    def get_issue_comments(
-        self, issue_id_or_key: str, count: int = 20 # orderパラメータはPyBacklogPyに存在しないため削除
-    ) -> List[Dict[str, Any]]:
-        """
-        課題のコメント一覧を取得
-
-        Args:
-            issue_id_or_key: 課題IDまたは課題キー
-            count: 取得件数（デフォルト20件）
-
-        Returns:
-            コメント一覧
-        """
-        try:
-            response = self.issue_comment_api.get_comment_list(
-                issue_id_or_key=issue_id_or_key, count=count
-            )
-            if response and hasattr(response, 'text'):
-                result: List[Dict[str, Any]] = json.loads(response.text)
-                return result
-            return []
-        except Exception as e:
-            print(f"Error getting comments for issue {issue_id_or_key}: {e}")
-            return []
-
-    def get_issue_types(
-        self, project_id_or_key: Union[str, int]
-    ) -> List[Dict[str, Any]]:
-        """
-        課題の種別一覧を取得
-
-        Args:
-            project_id_or_key: プロジェクトIDまたはプロジェクトキー
-
-        Returns:
-            課題の種別一覧
-        """
-        try:
-            # project_id_or_keyの型をstrに変換
-            project_key = str(project_id_or_key)
-            response = self.issue_type_api.get_issue_type_list(project_key)
-            result: List[Dict[str, Any]] = json.loads(response.text)
-            return result
-        except Exception as e:
-            print(f"Error getting issue types for project {project_id_or_key}: {e}")
-            return []

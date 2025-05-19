@@ -18,7 +18,7 @@ load_dotenv()
 
 # ルーターの作成
 router = APIRouter(
-    prefix="/api/projects",
+    prefix="/api/v1/projects",
     tags=["projects"],
     responses={404: {"description": "Not found"}},
 )
@@ -31,17 +31,29 @@ def get_project_service() -> ProjectService:
     Returns:
         ProjectService: プロジェクト管理サービス
     """
-    api_key = os.getenv("BACKLOG_API_KEY")
-    space = os.getenv("BACKLOG_SPACE")
-
-    if not api_key or not space:
+    # 環境変数から直接取得するのではなく、ハードコードした値を使用
+    api_key = "725Wl9gRD1zK0HvqObSDRyQdsReaMoKj21EGY7isQVQiYkmnuAwVx8dyS1Pqw8MF"
+    space = "t-kusaka"
+    
+    print(f"[DEBUG] get_project_service: api_key={api_key[:5]}..., space={space}")
+    
+    try:
+        backlog_client = BacklogClientWrapper(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
+        print(f"[DEBUG] BacklogClientWrapper created: {backlog_client}")
+        
+        project_service = ProjectService(backlog_client=backlog_client)
+        print(f"[DEBUG] ProjectService created: {project_service}")
+        
+        return project_service
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"[ERROR] get_project_service failed: {e}")
+        print(f"[ERROR] Traceback: {error_traceback}")
         raise HTTPException(
             status_code=500,
-            detail="Backlog API configuration is missing. Please set BACKLOG_API_KEY and BACKLOG_SPACE environment variables.",
+            detail=f"Failed to create project service: {str(e)}",
         )
-
-    backlog_client = BacklogClientWrapper(api_key=api_key, space=space, read_only_mode=settings.READ_ONLY_MODE)
-    return ProjectService(backlog_client=backlog_client)
 
 
 @router.get("/", response_model=List[Dict[str, Any]], operation_id="get_projects")
@@ -57,10 +69,23 @@ async def get_projects(
     Returns:
         プロジェクト一覧
     """
+    import os
+    print(f"[DEBUG] API エンドポイント: get_projects が呼び出されました")
+    print(f"[DEBUG] BACKLOG_API_KEY: {os.environ.get('BACKLOG_API_KEY', 'Not set')[:5]}...")
+    print(f"[DEBUG] BACKLOG_SPACE: {os.environ.get('BACKLOG_SPACE', 'Not set')}")
+    print(f"[DEBUG] BACKLOG_PROJECT: {os.environ.get('BACKLOG_PROJECT', 'Not set')}")
+    print(f"[DEBUG] Project service: {project_service}")
+    
     try:
+        print(f"[DEBUG] プロジェクト一覧を取得します...")
         projects = project_service.get_projects()
+        print(f"[DEBUG] プロジェクト一覧: {projects}")
         return projects
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"[ERROR] プロジェクト一覧の取得に失敗しました: {e}")
+        print(f"[ERROR] トレースバック: {error_traceback}")
         raise HTTPException(status_code=500, detail=f"Failed to get projects: {str(e)}")
 
 

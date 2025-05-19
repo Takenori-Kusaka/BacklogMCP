@@ -1,0 +1,142 @@
+name: MCP Inspector E2E Tests
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'scripts/run_inspector_*.sh'
+      - '.github/workflows/mcp-inspector-test.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'scripts/run_inspector_*.sh'
+      - '.github/workflows/mcp-inspector-test.yml'
+  workflow_dispatch:
+    inputs:
+      test_method:
+        description: 'テストメソッド (例: tools/list)'
+        required: false
+        default: ''
+      run_full_suite:
+        description: '完全なテストスイートを実行する'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  mcp-inspector-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: リポジトリのチェックアウト
+      uses: actions/checkout@v3
+    
+    - name: Node.jsのセットアップ
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
+        cache: 'npm'
+    
+    - name: Pythonのセットアップ
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Poetryのインストール
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+    
+    - name: 依存関係のインストール
+      run: |
+        poetry install
+        npm install -g @modelcontextprotocol/inspector
+    
+    - name: jqのインストール
+      run: sudo apt-get install -y jq
+    
+    - name: テスト結果ディレクトリの作成
+      run: mkdir -p test-reports/mcp-inspector
+    
+    - name: 単一テストの実行
+      if: ${{ github.event.inputs.run_full_suite != 'true' && github.event.inputs.test_method != '' }}
+      run: |
+        ./scripts/run_inspector_e2e_test.sh "${{ github.event.inputs.test_method }}"
+      env:
+        BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+        BACKLOG_SPACE: ${{ secrets.BACKLOG_SPACE }}
+        BACKLOG_PROJECT: ${{ secrets.BACKLOG_PROJECT }}
+        BACKLOG_ISSUE: ${{ secrets.BACKLOG_ISSUE }}
+    
+    - name: 基本テストの実行
+      if: ${{ github.event.inputs.run_full_suite != 'true' && github.event.inputs.test_method == '' }}
+      run: |
+        ./scripts/run_inspector_e2e_test.sh "tools/list"
+      env:
+        BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+        BACKLOG_SPACE: ${{ secrets.BACKLOG_SPACE }}
+        BACKLOG_PROJECT: ${{ secrets.BACKLOG_PROJECT }}
+        BACKLOG_ISSUE: ${{ secrets.BACKLOG_ISSUE }}
+    
+    - name: 完全なテストスイートの実行
+      if: ${{ github.event.inputs.run_full_suite == 'true' }}
+      run: |
+        ./scripts/run_inspector_test_suite.sh
+      env:
+        BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+        BACKLOG_SPACE: ${{ secrets.BACKLOG_SPACE }}
+        BACKLOG_PROJECT: ${{ secrets.BACKLOG_PROJECT }}
+        BACKLOG_ISSUE: ${{ secrets.BACKLOG_ISSUE }}
+    
+    - name: テスト結果のアップロード
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: mcp-inspector-test-reports
+        path: test-reports/mcp-inspector/
+        retention-days: 7
+    
+    - name: テスト結果の概要を表示
+      if: always()
+      run: |
+        if [ -d "test-reports/mcp-inspector" ]; then
+          echo "## MCP Inspector テスト結果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # 最新のサマリーファイルを検索
+          SUMMARY_FILE=$(find test-reports/mcp-inspector -name "suite_summary_*.txt" -type f -printf "%T@ %p\n" | sort -nr | head -1 | cut -d' ' -f2-)
+          
+          if [ -n "$SUMMARY_FILE" ] && [ -f "$SUMMARY_FILE" ]; then
+            echo "```" >> $GITHUB_STEP_SUMMARY
+            cat "$SUMMARY_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "```" >> $GITHUB_STEP_SUMMARY
+          else
+            # 個別のテスト結果ファイルを検索
+            REPORT_FILES=$(find test-reports/mcp-inspector -name "report_*.json" -type f)
+            
+            if [ -n "$REPORT_FILES" ]; then
+              echo "### テスト結果の概要" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| テスト | 結果 |" >> $GITHUB_STEP_SUMMARY
+              echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+              
+              for file in $REPORT_FILES; do
+                TEST_NAME=$(basename "$file" | sed 's/report_\(.*\)_[0-9]\{8\}_[0-9]\{6\}\.json/\1/' | tr '_' ' ')
+                if jq -e '.success > 0 && .failure == 0' "$file" > /dev/null 2>&1; then
+                  echo "| $TEST_NAME | ✅ 成功 |" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "| $TEST_NAME | ❌ 失敗 |" >> $GITHUB_STEP_SUMMARY
+                fi
+              done
+            else
+              echo "テスト結果ファイルが見つかりません。" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+        else
+          echo "テスト結果ディレクトリが見つかりません。" >> $GITHUB_STEP_SUMMARY
+        fi

@@ -36,6 +36,7 @@ bandit = "^1.7.8"
 safety = "^3.0.1"
 coverage-threshold = "^0.5.0"
 types-requests = "^2.32.0.20240501"
+schemathesis = "^3.39.16" # OpenAPIベースのE2Eテストツール
 
 [build-system]
 requires = ["poetry-core"]

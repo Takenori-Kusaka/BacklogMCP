@@ -1,0 +1,87 @@
+{
+  "basic_tests": [
+    {
+      "name": "ツール一覧の取得",
+      "method": "tools/list",
+      "description": "利用可能なツールの一覧を取得するテスト"
+    },
+    {
+      "name": "リソース一覧の取得",
+      "method": "resources/list",
+      "description": "利用可能なリソースの一覧を取得するテスト"
+    }
+  ],
+  "tool_tests": [
+    {
+      "name": "プロジェクト一覧の取得",
+      "method": "tools/call --tool-name get_projects",
+      "description": "プロジェクト一覧を取得するテスト",
+      "requires_auth": true
+    },
+    {
+      "name": "プロジェクト情報の取得",
+      "method": "tools/call --tool-name get_project --tool-arg project_key=$BACKLOG_PROJECT",
+      "description": "特定のプロジェクト情報を取得するテスト",
+      "requires_auth": true
+    },
+    {
+      "name": "課題一覧の取得",
+      "method": "tools/call --tool-name get_issues --tool-arg project_key=$BACKLOG_PROJECT",
+      "description": "課題一覧を取得するテスト",
+      "requires_auth": true
+    },
+    {
+      "name": "ユーザー一覧の取得",
+      "method": "tools/call --tool-name get_users",
+      "description": "ユーザー一覧を取得するテスト",
+      "requires_auth": true
+    },
+    {
+      "name": "優先度一覧の取得",
+      "method": "tools/call --tool-name get_priorities",
+      "description": "優先度一覧を取得するテスト",
+      "requires_auth": true
+    },
+    {
+      "name": "ステータス一覧の取得",
+      "method": "tools/call --tool-name get_statuses --tool-arg project_key=$BACKLOG_PROJECT",
+      "description": "ステータス一覧を取得するテスト",
+      "requires_auth": true
+    }
+  ],
+  "resource_tests": [
+    {
+      "name": "プロジェクト情報リソースの取得",
+      "method": "resources/get --resource-uri project_info --resource-arg project_key=$BACKLOG_PROJECT",
+      "description": "プロジェクト情報リソースを取得するテスト",
+      "requires_auth": true
+    },
+    {
+      "name": "課題情報リソースの取得",
+      "method": "resources/get --resource-uri issue_info --resource-arg project_key=$BACKLOG_PROJECT --resource-arg issue_key=$BACKLOG_ISSUE",
+      "description": "課題情報リソースを取得するテスト",
+      "requires_auth": true,
+      "requires_issue": true
+    }
+  ],
+  "error_tests": [
+    {
+      "name": "存在しないツールの呼び出し",
+      "method": "tools/call --tool-name non_existent_tool",
+      "description": "存在しないツールを呼び出した場合のエラーテスト",
+      "expected_error": true
+    },
+    {
+      "name": "存在しないリソースの取得",
+      "method": "resources/get --resource-uri non_existent_resource",
+      "description": "存在しないリソースを取得した場合のエラーテスト",
+      "expected_error": true
+    },
+    {
+      "name": "必須パラメータの欠落",
+      "method": "tools/call --tool-name get_project",
+      "description": "必須パラメータを指定しなかった場合のエラーテスト",
+      "expected_error": true
+    }
+  ]
+}
