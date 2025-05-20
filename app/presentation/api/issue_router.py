@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Query
-from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper, BacklogApiError
 from pydantic import BaseModel
 
 from app.application.services.issue_service import IssueService
@@ -315,8 +315,17 @@ async def get_issue_comments(
             issue_id_or_key=issue_id_or_key, count=count
         )
         return comments
+    except BacklogApiError as e:
+        status_code = e.status_code if e.status_code else 500
+        detail = str(e)
+        # OpenAPIのHTTPValidationError形式に合わせる場合
+        # detail = {"errors": [{"message": str(e), "code": e.status_code}]} # これはBacklogのエラー形式に近い
+        # FastAPIの標準的なエラー詳細形式は {"detail": "message"} または {"detail": [{"loc": ..., "msg": ..., "type": ...}]}
+        # ここではシンプルなメッセージ文字列をdetailに設定
+        raise HTTPException(status_code=status_code, detail=detail)
     except Exception as e:
+        # 予期せぬその他の例外
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get comments for issue {issue_id_or_key}: {str(e)}",
+            detail=f"An unexpected error occurred while processing comments for issue {issue_id_or_key}: {str(e)}",
         )

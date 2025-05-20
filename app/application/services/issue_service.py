@@ -3,9 +3,11 @@
 """
 
 from typing import Any, Dict, List, Optional, Union
+import logging # logging をインポート
 
-from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper
+from app.infrastructure.backlog.backlog_client_wrapper import BacklogClientWrapper, BacklogApiError # BacklogApiError をインポート
 
+logger = logging.getLogger(__name__) # ロガーを取得
 
 class IssueService:
     """
@@ -315,12 +317,16 @@ class IssueService:
                 issue_id_or_key=issue_id_or_key, count=count
             )
             return comments
+        except BacklogApiError: # BacklogApiError を捕捉してそのまま再送出
+            # ログは wrapper 層で記録済み、またはサービス層で追加のログが必要な場合
+            # logger.error(f"Backlog API error in service when getting comments for issue {issue_id_or_key}: {e}", exc_info=True)
+            raise
         except Exception as e:
-            # エラーログの出力など
-            print(f"Error getting comments for issue {issue_id_or_key}: {e}")
-            # 呼び出し元でハンドリングできるように例外を再スロー
+            # 予期せぬその他の例外
+            logger.error(f"Unexpected error in service when getting comments for issue {issue_id_or_key}: {e}", exc_info=True)
+            # アプリケーション固有のサービス層例外に変換するか、汎用的な例外として再送出
             raise Exception(
-                f"Failed to get comments for issue {issue_id_or_key}: {e}"
+                f"An unexpected error occurred while retrieving comments for issue {issue_id_or_key}."
             ) from e
 
     def get_issue_types(

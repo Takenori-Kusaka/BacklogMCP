@@ -26,11 +26,12 @@ FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
-# ヘルスチェック用のcurlのみをインストール
+# ヘルスチェック用のcurlとuvicornをインストール
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir uvicorn[standard]==0.34.2
 
 # ビルドステージから依存関係をコピー
 COPY --from=builder /build/deps /usr/local/lib/python3.12/site-packages/

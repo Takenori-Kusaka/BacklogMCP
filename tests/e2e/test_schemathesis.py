@@ -1,8 +1,25 @@
+import httpx # 追加
 import schemathesis
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app  # FastAPIアプリケーションインスタンスをインポート
-from hypothesis import settings # settingsをインポート
+from hypothesis import settings
+
+# モンキーパッチ: httpx.Requestにuriプロパティを追加
+if not hasattr(httpx.Request, 'uri'):
+    def get_uri(self_req: httpx.Request) -> httpx.URL:
+        return str(self_req.url) # str() で囲む
+
+    def set_uri(self_req: httpx.Request, value: str | httpx.URL) -> None:
+        if isinstance(value, str):
+            self_req.url = httpx.URL(value)
+        elif isinstance(value, httpx.URL):
+            self_req.url = value
+        else:
+            # Fallback or error, for now, convert to string then to URL
+            self_req.url = httpx.URL(str(value))
+
+    setattr(httpx.Request, 'uri', property(get_uri, set_uri))
 
 # OpenAPIスキーマをローカルファイルからロード
 # FastAPIアプリケーションが実行中である必要はありません
@@ -20,9 +37,10 @@ def test_api(case):
         "url": case.formatted_path,
         "headers": case.headers,
     }
-    if case.body is not schemathesis.types.NotSet: # NotSetでない場合のみjsonパラメータを追加
+    # ボディを持つ可能性のあるメソッドの場合のみjsonパラメータを設定
+    if case.method.upper() not in ("GET", "DELETE", "HEAD", "OPTIONS") and case.body is not schemathesis.types.NotSet:
         request_kwargs["json"] = case.body
-    if case.query is not schemathesis.types.NotSet: # NotSetでない場合のみparamsパラメータを追加
+    if case.query is not schemathesis.types.NotSet:
         request_kwargs["params"] = case.query
 
     response = client.request(**request_kwargs)

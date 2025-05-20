@@ -1,12 +1,12 @@
-name: backlog-mcp
+name: ${PROJECT_NAME:-backlog-mcp}
 services:
   backlog-mcp-api:
-    container_name: backlog-mcp-api
+    # container_nameを削除して、Docker Composeがプロジェクト名に基づいて自動的に名前を生成するようにする
     build:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     volumes:
       - ..:/app
     environment:
@@ -14,6 +14,7 @@ services:
       - BACKLOG_SPACE=${BACKLOG_SPACE}
       - BACKLOG_PROJECT=${BACKLOG_PROJECT}
       - BACKLOG_DISABLE_SSL_VERIFY=${BACKLOG_DISABLE_SSL_VERIFY:-false}
+      - PORT=${PORT:-8000}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]

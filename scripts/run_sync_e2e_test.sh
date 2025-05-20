@@ -44,23 +44,31 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
+# プロジェクト名の設定（環境変数から取得、または現在時刻を使用）
+PROJECT_NAME=${PROJECT_NAME:-"sync-e2e-test-$(date +%s)"}
+
+# ポートの設定（環境変数から取得、またはデフォルト値を使用）
+PORT=${PORT:-8001}
+
 echo "========================================================="
 echo "Docker Composeを使用してBacklogMCPサーバーを起動します..."
+echo "プロジェクト名: $PROJECT_NAME"
+echo "ポート: $PORT"
 echo "========================================================="
 
 # 既存のコンテナを停止・削除してから起動
-# ネットワークのラベル不整合エラーを回避するため、ネットワークも明示的に削除
-docker network rm backlog-mcp-test_default || true
-docker-compose -f docker/docker-compose.test.yml down --remove-orphans
-# 万が一downで消えなくても強制的に削除
-docker rm -f backlog-mcp-api-test || true
-docker-compose -f docker/docker-compose.test.yml up -d --build
+# プロジェクト名を指定してDocker Composeを実行
+docker-compose -f docker/docker-compose.yml -p $PROJECT_NAME down --remove-orphans
+
+# 環境変数を設定してDocker Composeを実行
+export PORT=$PORT
+docker-compose -f docker/docker-compose.yml -p $PROJECT_NAME up -d --build
 
 # サーバーの起動を待つ
 echo "サーバーの起動を待っています..."
 MAX_RETRIES=10  # 最大リトライ回数を10回（10秒）に短縮
 RETRY_COUNT=0
-SERVER_URL="http://localhost:8001"
+SERVER_URL="http://localhost:$PORT"
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if curl -s "$SERVER_URL/" > /dev/null; then

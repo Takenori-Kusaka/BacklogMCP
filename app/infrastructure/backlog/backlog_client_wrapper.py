@@ -7,6 +7,7 @@ PyBacklogPyのBacklogClientをラップして、テスト環境でのSSL検証�
 import json
 import os
 from typing import Any, Dict, List, Optional, Union
+import logging # logging をインポート
 
 import requests
 # requestsパッケージのインポートパスを修正
@@ -81,6 +82,10 @@ from pybacklogpy.Status import Status
 from pybacklogpy.User import User
 from pybacklogpy.Version import Version
 
+logger = logging.getLogger(__name__) # ロガーを取得
+class BacklogApiError(Exception):
+    """Backlog APIに関するカスタムエラー"""
+    pass
 
 class BacklogClientWrapper:
     """
@@ -737,3 +742,96 @@ class BacklogClientWrapper:
         except Exception as e:
             print(f"Error deleting issue {issue_id_or_key}: {e}")
             return False
+    def get_issue_types(
+        self, project_id_or_key: Union[str, int]
+    ) -> List[Dict[str, Any]]:
+        """
+        課題種別一覧を取得
+
+        Args:
+            project_id_or_key: プロジェクトIDまたはプロジェクトキー
+
+        Returns:
+            課題種別一覧
+        """
+        try:
+            project_key = str(project_id_or_key)
+            response = self.issue_type_api.get_issue_type_list(project_key)
+            result: List[Dict[str, Any]] = json.loads(response.text)
+            return result
+        except Exception as e:
+            print(f"Error getting issue types for project {project_id_or_key}: {e}")
+            return []
+
+    def add_comment(
+        self, issue_id_or_key: str, content: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        課題にコメントを追加
+
+        Args:
+            issue_id_or_key: 課題IDまたは課題キー
+            content: コメント内容
+
+        Returns:
+            追加されたコメント情報。失敗した場合はNone
+        """
+        if self.read_only_mode:
+            raise PermissionError("Cannot add comment in read-only mode.")
+        try:
+            response = self.issue_comment_api.add_issue_comment(
+                issue_id_or_key=issue_id_or_key, content=content
+            )
+            result: Dict[str, Any] = json.loads(response.text)
+            return result
+        except Exception as e:
+            print(f"Error adding comment to issue {issue_id_or_key}: {e}")
+            return None
+
+    def get_issue_comments(self, issue_id_or_key: str, count: Optional[int] = 100) -> List[Dict[str, Any]]:
+        """
+        課題のコメント一覧を取得
+
+        Args:
+            issue_id_or_key: 課題IDまたは課題キー
+            count: 取得件数 (デフォルト100)
+
+        Returns:
+            コメント一覧
+        """
+        try:
+            response = self.issue_comment_api.get_comment_list(
+                issue_id_or_key=issue_id_or_key, count=count
+            )
+            if not response or not response.text:
+                logger.error(f"Empty response from Backlog API for get_issue_comments ({issue_id_or_key})")
+                raise BacklogApiError(message=f"Empty response from Backlog API for issue comments for {issue_id_or_key}", status_code=500)
+
+            try:
+                response_json = json.loads(response.text)
+            except json.JSONDecodeError as je:
+                logger.error(f"JSONDecodeError for get_issue_comments ({issue_id_or_key}): {response.text}. Error: {je}")
+                raise BacklogApiError(message=f"Failed to decode JSON response for issue comments for {issue_id_or_key}", status_code=500, details=response.text)
+
+            if isinstance(response_json, dict) and "errors" in response_json:
+                 logger.warning(f"Backlog API returned error for get_issue_comments ({issue_id_or_key}): {response_json}")
+                 errors = response_json.get("errors", [])
+                 error_message = "Unknown error from Backlog API"
+                 status_code = 500
+                 if errors:
+                     first_error = errors[0]
+                     error_message = first_error.get("message", error_message)
+                     error_code = first_error.get("code")
+                     if error_code == 6 or "No such issue" in error_message or "課題が見つかりません" in error_message:
+                         status_code = 404
+                 raise BacklogApiError(message=error_message, status_code=status_code, details=response_json)
+
+            if not isinstance(response_json, list):
+                logger.error(f"Unexpected response format for get_issue_comments ({issue_id_or_key}): {response_json}")
+                raise BacklogApiError(message=f"Unexpected response format for issue comments for {issue_id_or_key}", status_code=500, details=response_json)
+            return response_json
+        except BacklogApiError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to get issue comments for {issue_id_or_key}: {e}", exc_info=True)
+            raise BacklogApiError(message=f"An unexpected error occurred while getting issue comments for {issue_id_or_key}: {str(e)}", status_code=500) from e
